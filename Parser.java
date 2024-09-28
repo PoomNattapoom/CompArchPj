@@ -37,6 +37,10 @@ public class Parser {
           currentAddress++; // Increment address for each instruction parsed
         }
       }
+      // Skip over newlines or extra spaces between instructions
+      while (currentToken != null && currentToken.getType() == Tokenizer.TokenType.WHITESPACE) {
+        advance(); // Move past spaces or newlines to get to the next instruction
+      }
     }
     return program;
   }
@@ -57,7 +61,7 @@ public class Parser {
       InstructionNode instructionNode = new InstructionNode(currentToken.getValue());
       advance(); // Move to the first operand
 
-      while (currentToken != null) {
+      while (currentToken != null && currentToken.getType() != Tokenizer.TokenType.INSTRUCTION) {
         if (currentToken.getType() == Tokenizer.TokenType.NUMBER) {
           instructionNode.addOperand(new NumberNode(Integer.parseInt(currentToken.getValue())));
         } else if (currentToken.getType() == Tokenizer.TokenType.REGISTER) {
@@ -86,8 +90,7 @@ public class Parser {
 
   public static void main(String[] args) {
     Tokenizer tokenizer = new Tokenizer();
-    String assemblyCode = "ADD x1, x2, x3";
-    // String assemblyCode = "ADDI x1, x2, 1000";
+    String assemblyCode = "ADD x1 x2 x1\nHALT\nHALT";
 
     List<Tokenizer.Token> tokens = tokenizer.tokenize(assemblyCode);
     Parser parser = new Parser(tokens);
