@@ -7,6 +7,8 @@ public class CodeGenerator implements NodeVisitor {
   private Map<String, String> opcodeMap = new HashMap<>();
   private Map<String, String> registerMap = new HashMap<>();
 
+  private Map<String, Integer> variableMap = new HashMap<>();
+
   public CodeGenerator() {
 
     // ADD, NAND, LW, SW, BEQ, JALR, HALT, NOOP
@@ -61,14 +63,29 @@ public class CodeGenerator implements NodeVisitor {
     // Handle O-format
     else if (opCode.equals("110") || opCode.equals("111")) { // HALT NOOP
       oTypeVisit(node, opCode);
-    }
 
-    else {
+    } else {
       throw new IllegalArgumentException("Unknown instruction: " + node.getInstruction());
     }
 
     machineCode.append("\n");
 
+  }
+
+  public void fillVisit(InstructionNode node) {
+    // Get the label
+    LabelNode labelNode = (LabelNode) node.getOperands().get(0);
+    String name = labelNode.getLabel();
+
+    // Get the value
+    NumberNode valueNode = (NumberNode) node.getOperands().get(1);
+    int value = valueNode.getNumber();
+
+    // Store the value in the variable map
+    variableMap.put(name, value);
+
+    // Output the machine code
+    machineCode.append(" ").append(value);
   }
 
   public void rTypeVisit(InstructionNode node, String opCode) {
@@ -136,5 +153,23 @@ public class CodeGenerator implements NodeVisitor {
   @Override
   public void visit(NumberNode node) {
     machineCode.append(" ").append(node.getNumber());
+  }
+
+  @Override
+  public void visit(FillNode node) {
+
+    // Get the label
+    LabelNode labelNode = (LabelNode) node.getName();
+    String name = labelNode.getLabel();
+
+    // Get the value
+    NumberNode valueNode = (NumberNode) node.getValue();
+    int value = valueNode.getNumber();
+
+    // Store the value in the variable map
+    variableMap.put(name, value);
+
+    // Output the machine code
+    machineCode.append(value);
   }
 }

@@ -92,7 +92,9 @@ public class Tokenizer {
 
         // String assemblyCode = "ADD x1, x2, x3";
         // String assemblyCode = "ADD x1 x2 x3";
-        String assemblyCode = "start ADD x1 x2 x1 .FILL";
+        // String assemblyCode = "start ADD x1 x2 x1 .FILL";
+        // String assemblyCode = ".FILL 20 10";
+        String assemblyCode = "num .FILL 10";
 
         List<Token> tokens = tokenizer.tokenize(assemblyCode);
         for (Token token : tokens) {

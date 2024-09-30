@@ -5,6 +5,7 @@ public class Parser {
   private Iterator<Tokenizer.Token> iterator;
   private Tokenizer.Token currentToken;
   private Map<String, Label> labels = new HashMap<>();
+  private Map<String, Integer> variables = new HashMap<>();
   private int currentAddress = 0;
 
   public Parser(List<Tokenizer.Token> tokens) {
@@ -95,15 +96,20 @@ public class Parser {
       if (currentToken.getValue() != ".FILL") {
         return null;
       }
+      advance();
+      NumberNode numberNode = new NumberNode(Integer.parseInt(currentToken.getValue()));
+      FillNode fillNode = new FillNode(labelNode, numberNode);
 
-      return null;
+      return fillNode;
     }
+    return null;
 
   }
 
   public static void main(String[] args) {
     Tokenizer tokenizer = new Tokenizer();
-    String assemblyCode = "ADD x1 x2 x1\nHALT\nHALT";
+    // String assemblyCode = "ADD x1 x2 x1\nHALT\nHALT";
+    String assemblyCode = "num .FILL 10";
 
     List<Tokenizer.Token> tokens = tokenizer.tokenize(assemblyCode);
     Parser parser = new Parser(tokens);
