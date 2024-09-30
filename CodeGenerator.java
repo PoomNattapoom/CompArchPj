@@ -8,6 +8,7 @@ public class CodeGenerator implements NodeVisitor {
   private Map<String, String> registerMap = new HashMap<>();
 
   private Map<String, Integer> variableMap = new HashMap<>();
+  private Map<String, String> addressMap = new HashMap<>();
 
   public CodeGenerator() {
 
@@ -63,7 +64,8 @@ public class CodeGenerator implements NodeVisitor {
     // Handle O-format
     else if (opCode.equals("110") || opCode.equals("111")) { // HALT NOOP
       oTypeVisit(node, opCode);
-
+    } else if (node.getInstruction().equals(".FILL")) {
+      fillVisit(node);
     } else {
       throw new IllegalArgumentException("Unknown instruction: " + node.getInstruction());
     }
@@ -74,12 +76,16 @@ public class CodeGenerator implements NodeVisitor {
 
   public void fillVisit(InstructionNode node) {
     // Get the label
-    LabelNode labelNode = (LabelNode) node.getOperands().get(0);
-    String name = labelNode.getLabel();
+    String name = node.getOperands().get(0).getLabel();
 
     // Get the value
-    NumberNode valueNode = (NumberNode) node.getOperands().get(1);
-    int value = valueNode.getNumber();
+    if (node.getOperands().get(1) instanceof LabelNode) {
+      String value = node.getOperands().get(1).toString();
+      addressMap.put(name, value);
+    } else if (node.getOperands().get(1) instanceof NumberNode) {
+      int value = Integer.parseInt(node.getOperands().get(1).toString());
+    }
+    int value = node.getOperands().get(1);
 
     // Store the value in the variable map
     variableMap.put(name, value);
@@ -153,23 +159,5 @@ public class CodeGenerator implements NodeVisitor {
   @Override
   public void visit(NumberNode node) {
     machineCode.append(" ").append(node.getNumber());
-  }
-
-  @Override
-  public void visit(FillNode node) {
-
-    // Get the label
-    LabelNode labelNode = (LabelNode) node.getName();
-    String name = labelNode.getLabel();
-
-    // Get the value
-    NumberNode valueNode = (NumberNode) node.getValue();
-    int value = valueNode.getNumber();
-
-    // Store the value in the variable map
-    variableMap.put(name, value);
-
-    // Output the machine code
-    machineCode.append(value);
   }
 }

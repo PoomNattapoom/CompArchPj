@@ -98,9 +98,10 @@ public class Parser {
       }
       advance();
       NumberNode numberNode = new NumberNode(Integer.parseInt(currentToken.getValue()));
-      FillNode fillNode = new FillNode(labelNode, numberNode);
-
-      return fillNode;
+      InstructionNode instructionNode = new InstructionNode(".FILL");
+      instructionNode.addOperand(labelNode);
+      instructionNode.addOperand(numberNode);
+      return instructionNode;
     }
     return null;
 

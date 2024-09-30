@@ -10,34 +10,34 @@ abstract class ASTNode {
     public abstract String toString();
 }
 
-class FillNode extends ASTNode {
-    private LabelNode name;
-    private NumberNode value;
+// class FillNode extends ASTNode {
+// private LabelNode name;
+// private NumberNode value;
 
-    public FillNode(LabelNode name, NumberNode value) {
-        this.name = name;
-        this.value = value;
-    }
+// public FillNode(LabelNode name, NumberNode value) {
+// this.name = name;
+// this.value = value;
+// }
 
-    public LabelNode getName() {
-        return name;
-    }
+// public LabelNode getName() {
+// return name;
+// }
 
-    public NumberNode getValue() {
-        return value;
-    }
+// public NumberNode getValue() {
+// return value;
+// }
 
-    @Override
-    public void accept(NodeVisitor visitor) {
-        visitor.visit(this);
-    }
+// @Override
+// public void accept(NodeVisitor visitor) {
+// visitor.visit(this);
+// }
 
-    @Override
-    public String toString() {
-        return "Fill: " + name.toString() + ", " + value.toString();
-    }
+// @Override
+// public String toString() {
+// return "Fill: " + name.toString() + ", " + value.toString();
+// }
 
-}
+// }
 
 // AST Node for an instruction (e.g., ADD, BEQ)
 class InstructionNode extends ASTNode {
@@ -159,6 +159,4 @@ interface NodeVisitor {
     void visit(LabelNode node);
 
     void visit(NumberNode node);
-
-    void visit(FillNode node);
 }
