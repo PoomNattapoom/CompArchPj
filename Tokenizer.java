@@ -58,7 +58,7 @@ public class Tokenizer {
                 tokens.add(new Token(part, TokenType.NUMBER));
             } else if (part.equals(",")) {
                 tokens.add(new Token(part, TokenType.SEPARATOR));
-            } else if (part.matches("[A-Za-z_][A-Za-z0-9_]*:")) {
+            } else if (part.matches("[A-Za-z0-9_]*")) {
                 tokens.add(new Token(part.toUpperCase(), TokenType.LABEL));
             } else if (part.equals("(") || part.equals(")")) {
                 tokens.add(new Token(part, TokenType.SEPARATOR));
@@ -75,7 +75,7 @@ public class Tokenizer {
     private boolean isInstruction(String token) {
         // Add more instructions as necessary
         return token.matches(
-                "ADD|NAND|LW|SW|BEQ|JALR|HALT|NOOP");
+                "ADD|NAND|LW|SW|BEQ|JALR|HALT|NOOP|.FILL");
     }
 
     private boolean isRegister(String token) {
@@ -92,7 +92,7 @@ public class Tokenizer {
 
         // String assemblyCode = "ADD x1, x2, x3";
         // String assemblyCode = "ADD x1 x2 x3";
-        String assemblyCode = "ADD x1 x2 x1\nHALT";
+        String assemblyCode = "start ADD x1 x2 x1 .FILL";
 
         List<Token> tokens = tokenizer.tokenize(assemblyCode);
         for (Token token : tokens) {

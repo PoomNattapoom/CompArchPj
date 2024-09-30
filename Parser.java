@@ -57,7 +57,11 @@ public class Parser {
   }
 
   private ASTNode parseInstruction() {
-    if (currentToken != null && currentToken.getType() == Tokenizer.TokenType.INSTRUCTION) {
+    // Normal Instruction
+    if (currentToken == null)
+      return null;
+
+    if (currentToken.getType() == Tokenizer.TokenType.INSTRUCTION) {
       InstructionNode instructionNode = new InstructionNode(currentToken.getValue());
       advance(); // Move to the first operand
 
@@ -83,9 +87,18 @@ public class Parser {
       }
 
       return instructionNode;
+
+      // Case .fill
+    } else if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
+      LabelNode labelNode = new LabelNode(currentToken.getValue());
+      advance();
+      if (currentToken.getValue() != ".FILL") {
+        return null;
+      }
+
+      return null;
     }
-    advance();
-    return null;
+
   }
 
   public static void main(String[] args) {
