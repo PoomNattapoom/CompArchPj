@@ -28,7 +28,7 @@ public class Parser {
     List<ASTNode> program = new ArrayList<>();
     while (currentToken != null) {
       if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
-        String labelName = currentToken.getValue().replace(":", ""); // Remove the colon
+        String labelName = currentToken.getValue();
         defineLabel(labelName, currentAddress);
         advance(); // Move to the next token
       } else {
@@ -90,21 +90,27 @@ public class Parser {
       return instructionNode;
 
       // Case .fill
-    } else if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
-      LabelNode labelNode = new LabelNode(currentToken.getValue());
-      advance();
-      if (currentToken.getValue() != ".FILL") {
-        return null;
-      }
-      advance();
-      NumberNode numberNode = new NumberNode(Integer.parseInt(currentToken.getValue()));
-      InstructionNode instructionNode = new InstructionNode(".FILL");
-      instructionNode.addOperand(labelNode);
-      instructionNode.addOperand(numberNode);
-      return instructionNode;
-    }
-    return null;
+      // } else if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
+      // LabelNode labelNode = new LabelNode(currentToken.getValue());
+      // advance();
+      // if (currentToken.getValue() != ".FILL") {
+      // return null;
+      // }
+      // advance();
+      // NumberNode numberNode = new
+      // NumberNode(Integer.parseInt(currentToken.getValue()));
+      // InstructionNode instructionNode = new InstructionNode(".FILL");
 
+      // instructionNode.addOperand(numberNode);
+      // instructionNode.addOperand(new NumberNode(50));
+
+      // advance();
+
+      // return instructionNode;
+
+    } else {
+      throw new IllegalArgumentException("Invalid instruction: " + currentToken.getValue());
+    }
   }
 
   public static void main(String[] args) {
@@ -119,11 +125,12 @@ public class Parser {
     // Generate machine code from AST
     CodeGenerator codeGen = new CodeGenerator();
     for (ASTNode node : ast) {
-      node.accept(codeGen);
+      // node.accept(codeGen);
+      System.out.println(node.toString());
     }
 
     // Output the generated machine code
-    System.out.println("Generated Machine Code:");
-    System.out.println(codeGen.getMachineCode());
+    // System.out.println("Generated Machine Code:");
+    // System.out.println(codeGen.getMachineCode());
   }
 }
