@@ -5,18 +5,18 @@
 #define NUMREGS 8 /* number of machine registers */
 
 /* Define class-like structure for MachineState */
-typedef struck {
+typedef struct {
     int pc;
     int mem[NUMMEMORY];
     int reg[NUMREGS];
     int numMemory;
-} machineState;
+} MachineState;
 
 /* Function prototypes */
 void initMachineStates(MachineState *state);
-void loadMemory(Machine *state, char *filename);
+void loadMemory(MachineState *state, char *filename);
 int fetch(MachineState *state);
-void UpdatePC(Machine *state);
+void UpdatePC(MachineState *state);
 void halt();
 void printState(MachineState *state);
 
