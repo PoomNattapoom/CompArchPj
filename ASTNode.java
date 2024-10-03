@@ -8,36 +8,11 @@ abstract class ASTNode {
     // Add a method to print the structure of the AST node
     @Override
     public abstract String toString();
+
+    public abstract String getValue();
+
+    public abstract void firstAccept(NodeVisitor visitor);
 }
-
-// class FillNode extends ASTNode {
-// private LabelNode name;
-// private NumberNode value;
-
-// public FillNode(LabelNode name, NumberNode value) {
-// this.name = name;
-// this.value = value;
-// }
-
-// public LabelNode getName() {
-// return name;
-// }
-
-// public NumberNode getValue() {
-// return value;
-// }
-
-// @Override
-// public void accept(NodeVisitor visitor) {
-// visitor.visit(this);
-// }
-
-// @Override
-// public String toString() {
-// return "Fill: " + name.toString() + ", " + value.toString();
-// }
-
-// }
 
 // AST Node for an instruction (e.g., ADD, BEQ)
 class InstructionNode extends ASTNode {
@@ -47,6 +22,13 @@ class InstructionNode extends ASTNode {
     public InstructionNode(String instruction) {
         this.instruction = instruction;
         this.operands = new ArrayList<>();
+    }
+
+    public InstructionNode(String instruction, ASTNode operand1, ASTNode operand2) {
+        this.instruction = instruction;
+        this.operands = new ArrayList<>();
+        this.operands.add(operand1);
+        this.operands.add(operand2);
     }
 
     public String getInstruction() {
@@ -67,6 +49,11 @@ class InstructionNode extends ASTNode {
     }
 
     @Override
+    public void firstAccept(NodeVisitor visitor) {
+        visitor.firstVisit(this);
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Instruction: ").append(instruction).append(", Operands: [");
@@ -78,6 +65,11 @@ class InstructionNode extends ASTNode {
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    @Override
+    public String getValue() {
+        return instruction;
     }
 }
 
@@ -99,8 +91,18 @@ class RegisterNode extends ASTNode {
     }
 
     @Override
+    public void firstAccept(NodeVisitor visitor) {
+
+    }
+
+    @Override
     public String toString() {
         return "Register: " + register;
+    }
+
+    @Override
+    public String getValue() {
+        return register;
     }
 }
 
@@ -122,8 +124,19 @@ class LabelNode extends ASTNode {
     }
 
     @Override
+    public void firstAccept(NodeVisitor visitor) {
+
+    }
+
+    @Override
     public String toString() {
         return "Label: " + label;
+        // return "";
+    }
+
+    @Override
+    public String getValue() {
+        return label;
     }
 }
 
@@ -145,13 +158,25 @@ class NumberNode extends ASTNode {
     }
 
     @Override
+    public void firstAccept(NodeVisitor visitor) {
+
+    }
+
+    @Override
     public String toString() {
         return "Number: " + number;
+    }
+
+    @Override
+    public String getValue() {
+        return Integer.toString(number);
     }
 }
 
 // Visitor interface for traversing AST nodes (optional for further steps)
 interface NodeVisitor {
+    void firstVisit(InstructionNode node);
+
     void visit(InstructionNode node);
 
     void visit(RegisterNode node);

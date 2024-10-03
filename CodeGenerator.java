@@ -10,6 +10,10 @@ public class CodeGenerator implements NodeVisitor {
   private Map<String, Integer> variableMap = new HashMap<>();
   private Map<String, String> addressMap = new HashMap<>();
 
+  public Map<String, Integer> getVariableMap() {
+    return variableMap;
+  }
+
   public CodeGenerator() {
 
     // ADD, NAND, LW, SW, BEQ, JALR, HALT, NOOP
@@ -39,10 +43,16 @@ public class CodeGenerator implements NodeVisitor {
     return machineCode.toString();
   }
 
+  public void firstVisit(InstructionNode node) {
+    if (node.getInstruction().equals(".FILL")) {
+      fillFirstVisit(node);
+    }
+  }
+
   @Override
   public void visit(InstructionNode node) {
 
-    System.out.println("Visiting instruction: " + node.getInstruction());
+    // System.out.println("Visiting instruction: " + node.getInstruction());
 
     String opCode = opcodeMap.getOrDefault(node.getInstruction(), "????");
 
@@ -74,24 +84,55 @@ public class CodeGenerator implements NodeVisitor {
 
   }
 
-  public void fillVisit(InstructionNode node) {
+  public void fillFirstVisit(InstructionNode node) {
     // Get the label
-    String name = node.getOperands().get(0).getLabel();
+
+    String name = null;
+    if (node.getOperands().get(0) instanceof LabelNode) {
+      name = node.getOperands().get(0).getValue();
+    } else {
+      throw new IllegalArgumentException("Expected a label for .FILL instruction");
+    }
 
     // Get the value
     if (node.getOperands().get(1) instanceof LabelNode) {
-      String value = node.getOperands().get(1).toString();
+      String value = node.getOperands().get(1).getValue();
       addressMap.put(name, value);
+      // machineCode.append(value);
     } else if (node.getOperands().get(1) instanceof NumberNode) {
-      int value = Integer.parseInt(node.getOperands().get(1).toString());
+      NumberNode immediateNode = (NumberNode) node.getOperands().get(1);
+      int value = immediateNode.getNumber();
+      variableMap.put(name, value); //
+      // machineCode.append(value);
+    } else {
+      throw new IllegalArgumentException("Expected a number or label for .FILL instruction");
     }
-    int value = node.getOperands().get(1);
+  }
 
-    // Store the value in the variable map
-    variableMap.put(name, value);
+  public void fillVisit(InstructionNode node) {
+    // Get the label
 
-    // Output the machine code
-    machineCode.append(" ").append(value);
+    String name = null;
+    if (node.getOperands().get(0) instanceof LabelNode) {
+      name = node.getOperands().get(0).getValue();
+    } else {
+      throw new IllegalArgumentException("Expected a label for .FILL instruction");
+    }
+
+    // Get the value
+    if (node.getOperands().get(1) instanceof LabelNode) {
+      String value = node.getOperands().get(1).getValue();
+      addressMap.put(name, value);
+      machineCode.append(value);
+    } else if (node.getOperands().get(1) instanceof NumberNode) {
+      NumberNode immediateNode = (NumberNode) node.getOperands().get(1);
+      int value = immediateNode.getNumber();
+      variableMap.put(name, value); //
+      machineCode.append(value);
+    } else {
+      throw new IllegalArgumentException("Expected a number or label for .FILL instruction");
+    }
+
   }
 
   public void rTypeVisit(InstructionNode node, String opCode) {
@@ -110,15 +151,21 @@ public class CodeGenerator implements NodeVisitor {
   }
 
   public void iTypeVisit(InstructionNode node, String opCode) {
-
+    int imm;
     // Expecting the immediate to be the first operand
-    NumberNode immediateNode = (NumberNode) node.getOperands().get(2);
+    if (node.getOperands().get(2) instanceof LabelNode) {
+      imm = (variableMap.get(node.getOperands().get(2).getValue())) & 0xFFF;
+
+    } else {
+      NumberNode immediateNode = (NumberNode) node.getOperands().get(2);
+      imm = immediateNode.getNumber() & 0xFFF; // Mask to get the lower 12 bits
+    }
+
     RegisterNode rsNode = (RegisterNode) node.getOperands().get(1);
     RegisterNode rtNode = (RegisterNode) node.getOperands().get(0);
 
     // Get the immediate value
-    int immediateValue = immediateNode.getNumber() & 0xFFF; // Mask to get the lower 12 bits
-    String immediate = String.format("%016d", Integer.parseInt(Integer.toBinaryString(immediateValue)));
+    String immediate = String.format("%016d", Integer.parseInt(Integer.toBinaryString(imm)));
 
     // Build the machine code
     machineCode.append(opCode); // immediate
@@ -153,11 +200,36 @@ public class CodeGenerator implements NodeVisitor {
 
   @Override
   public void visit(LabelNode node) {
-    machineCode.append(" LABEL(").append(node.getLabel()).append(")");
+    // machineCode.append(" LABEL(").append(node.getLabel()).append(")");
   }
 
   @Override
   public void visit(NumberNode node) {
     machineCode.append(" ").append(node.getNumber());
+  }
+
+  public static void main(String[] args) {
+    Tokenizer tokenizer = new Tokenizer();
+    String assemblyCode = "add x1 x2 x3 \n num .FILL 10";
+    // String assemblyCode = "HALT";
+    // String assemblyCode = "num .FILL 10";
+
+    List<Tokenizer.Token> tokens = tokenizer.tokenize(assemblyCode);
+    Parser parser = new Parser(tokens);
+    List<List<ASTNode>> ast = parser.parseProgram();
+
+    // Generate machine code from AST
+    CodeGenerator codeGen = new CodeGenerator();
+    for (List<ASTNode> nodes : ast) {
+      for (ASTNode node : nodes) {
+        // System.out.println(node.toString());
+        node.accept(codeGen);
+      }
+    }
+
+    // Output the generated machine code
+    System.out.println("Generated Machine Code:");
+    System.out.println(codeGen.getMachineCode());
+
   }
 }

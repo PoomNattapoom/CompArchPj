@@ -4,7 +4,7 @@ public class Parser {
   private List<Tokenizer.Token> tokens;
   private Iterator<Tokenizer.Token> iterator;
   private Tokenizer.Token currentToken;
-  private Map<String, Label> labels = new HashMap<>();
+  private Map<String, Integer> addressMap = new HashMap<>();
   private Map<String, Integer> variables = new HashMap<>();
   private int currentAddress = 0;
 
@@ -12,6 +12,14 @@ public class Parser {
     this.tokens = tokens;
     this.iterator = tokens.iterator();
     advance(); // Move to the first token
+  }
+
+  private Map<String, Integer> getVariables() {
+    return variables;
+  }
+
+  private void setVariables(Map<String, Integer> variables) {
+    this.variables = variables;
   }
 
   // Helper method to advance to the next token
@@ -24,32 +32,86 @@ public class Parser {
   }
 
   // Parse the entire program (could be multiple instructions)
-  public List<ASTNode> parseProgram() {
-    List<ASTNode> program = new ArrayList<>();
-    while (currentToken != null) {
-      if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
-        String labelName = currentToken.getValue();
-        defineLabel(labelName, currentAddress);
-        advance(); // Move to the next token
-      } else {
-        ASTNode instruction = parseInstruction();
-        if (instruction != null) {
-          program.add(instruction);
-          currentAddress++; // Increment address for each instruction parsed
-        }
-      }
-      // Skip over newlines or extra spaces between instructions
-      while (currentToken != null && currentToken.getType() == Tokenizer.TokenType.WHITESPACE) {
-        advance(); // Move past spaces or newlines to get to the next instruction
-      }
+  public List<List<ASTNode>> parseProgram() {
+
+    List<List<ASTNode>> program = new ArrayList<>();
+    List<ASTNode> line = parseLine();
+    while (line != null) {
+      program.add(line);
+      line = parseLine();
     }
     return program;
   }
 
+  private List<ASTNode> parseLine() {
+
+    if (currentToken == null) {
+      return null;
+    }
+
+    String label = null;
+
+    // Parse Label first
+    List<ASTNode> line = new ArrayList<>();
+
+    if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
+      // System.out.println("Label: " + currentToken.getValue());
+      label = currentToken.getValue();
+      defineLabel(label, currentAddress);
+      advance(); // Move to the next token
+    }
+
+    // How to get the address of a label
+    // System.out.println(labels.get("start").getAddress());
+
+    // line.add(new LabelNode(label));
+    // Add the label for each line
+    // line.add(new LabelNode(label));
+
+    // System.out.println("Current token: " + currentToken.getValue() + " (Type: " +
+    // currentToken.getType() + ")");
+
+    if (currentToken.getValue().equals(".FILL")) {
+      advance(); // Move to the number after .FILL
+      if (currentToken.getType() == Tokenizer.TokenType.NUMBER) {
+        NumberNode numberNode = new NumberNode(Integer.parseInt(currentToken.getValue()));
+        variables.put(label, numberNode.getNumber());
+        ASTNode instruction = new InstructionNode(".FILL", new LabelNode(label), numberNode);
+        line.add(instruction);
+        advance();
+      } else {
+        throw new IllegalArgumentException("Expected a number after .FILL");
+      }
+    } else if (currentToken.getType() == Tokenizer.TokenType.INSTRUCTION) {
+      ASTNode instruction = parseInstruction();
+      if (instruction != null)
+        line.add(instruction);
+
+    } else {
+      throw new IllegalArgumentException("Invalid instruction: " + currentToken.getValue());
+    }
+
+    // Handle comments
+    while (currentToken != null) {
+      if (currentToken.getType() == Tokenizer.TokenType.NEWLINE) {
+        advance();
+        currentAddress++;
+        return line;
+      }
+      if (currentToken.getType() != Tokenizer.TokenType.LABEL) {
+        throw new IllegalArgumentException("Invalid token: " + currentToken.getValue());
+      }
+      advance();
+    }
+
+    advance();
+    currentAddress++; // Increment address for each line parsed
+
+    return line;
+  }
+
   private void defineLabel(String name, int address) {
-    Label label = new Label(name);
-    label.setAddress(address);
-    labels.put(name, label);
+    addressMap.put(name, address);
   }
 
   public Integer getLabelAddress(String name) {
@@ -57,80 +119,140 @@ public class Parser {
     return (label != null && label.isDefined()) ? label.getAddress() : null;
   }
 
+  public Integer getSymbolicInteger(String name) {
+    return variables.get(name);
+  }
+
   private ASTNode parseInstruction() {
     // Normal Instruction
     if (currentToken == null)
       return null;
 
-    if (currentToken.getType() == Tokenizer.TokenType.INSTRUCTION) {
-      InstructionNode instructionNode = new InstructionNode(currentToken.getValue());
-      advance(); // Move to the first operand
+    if (currentToken.getType() != Tokenizer.TokenType.INSTRUCTION) {
+      throw new IllegalArgumentException("Invalid instruction: " + currentToken.getValue());
+    }
 
-      while (currentToken != null && currentToken.getType() != Tokenizer.TokenType.INSTRUCTION) {
+    InstructionNode instructionNode = new InstructionNode(currentToken.getValue());
+
+    // Handle HALT and NOOP instructions (0 operands)
+    if (currentToken.getValue().equals("HALT") || currentToken.getValue().equals("NOOP")) {
+      // System.out.println("HALT or NOOP instruction");
+      advance();
+      return instructionNode;
+
+      // Handle JALR instuctions (2 operands)
+    }
+
+    if (currentToken.getValue().equals("JALR")) {
+      advance(); // Move to the first operand
+      for (int i = 0; i < 2; i++) {
+        if (currentToken == null) {
+          throw new IllegalArgumentException(
+              "Expected 2 operands for instruction: " + instructionNode.getInstruction());
+        }
         if (currentToken.getType() == Tokenizer.TokenType.NUMBER) {
           instructionNode.addOperand(new NumberNode(Integer.parseInt(currentToken.getValue())));
         } else if (currentToken.getType() == Tokenizer.TokenType.REGISTER) {
           instructionNode.addOperand(new RegisterNode(currentToken.getValue()));
-        } else if (currentToken.getType() == Tokenizer.TokenType.SEPARATOR) {
-          if (currentToken.getValue().equals("(")) {
-            advance(); // Move to base register
-            if (currentToken != null && currentToken.getType() == Tokenizer.TokenType.REGISTER) {
-              instructionNode.addOperand(new RegisterNode(currentToken.getValue())); // Base register
-              advance(); // Move past base register
-            }
-            if (currentToken != null && currentToken.getValue().equals(")")) {
-              advance(); // Skip closing parenthesis
-            }
-            break; // Exit the loop after processing base register
-          }
+        } else if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
+          instructionNode.addOperand(new LabelNode(currentToken.getValue()));
+        } else {
+          throw new IllegalArgumentException("Invalid operand: " + currentToken.getValue());
         }
         advance(); // Move to the next token
       }
 
-      return instructionNode;
-
-      // Case .fill
-      // } else if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
-      // LabelNode labelNode = new LabelNode(currentToken.getValue());
-      // advance();
-      // if (currentToken.getValue() != ".FILL") {
-      // return null;
-      // }
-      // advance();
-      // NumberNode numberNode = new
-      // NumberNode(Integer.parseInt(currentToken.getValue()));
-      // InstructionNode instructionNode = new InstructionNode(".FILL");
-
-      // instructionNode.addOperand(numberNode);
-      // instructionNode.addOperand(new NumberNode(50));
-
-      // advance();
-
-      // return instructionNode;
+      // Handle Other Instructions (3 Operands)
+    } else if (currentToken.getValue().equals("ADD") || currentToken.getValue().equals("NAND")) {
+      advance(); // Move to the first operand
+      for (int i = 0; i < 3; i++) {
+        if (currentToken == null) {
+          throw new IllegalArgumentException(
+              "Expected 2 operands for instruction: " + instructionNode.getInstruction());
+        }
+        if (currentToken.getType() == Tokenizer.TokenType.NUMBER) {
+          instructionNode.addOperand(new NumberNode(Integer.parseInt(currentToken.getValue())));
+        } else if (currentToken.getType() == Tokenizer.TokenType.REGISTER) {
+          instructionNode.addOperand(new RegisterNode(currentToken.getValue()));
+        } else {
+          throw new IllegalArgumentException("Invalid operand: " + currentToken.getValue());
+        }
+        advance(); // Move to the next token
+      }
 
     } else {
-      throw new IllegalArgumentException("Invalid instruction: " + currentToken.getValue());
+      advance(); // Move to the first operand
+      for (int i = 0; i < 3; i++) {
+        if (currentToken == null) {
+          throw new IllegalArgumentException(
+              "Expected 2 operands for instruction: " + instructionNode.getInstruction());
+        }
+        if (currentToken.getType() == Tokenizer.TokenType.NUMBER) {
+          instructionNode.addOperand(new NumberNode(Integer.parseInt(currentToken.getValue())));
+        } else if (currentToken.getType() == Tokenizer.TokenType.REGISTER) {
+          instructionNode.addOperand(new RegisterNode(currentToken.getValue()));
+        } else if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
+          String name = currentToken.getValue();
+          instructionNode.addOperand(new LabelNode(name));
+        } else {
+          throw new IllegalArgumentException("Invalid operand: " + currentToken.getValue());
+        }
+
+        advance(); // Move to the next token
+      }
     }
+
+    return instructionNode;
   }
 
   public static void main(String[] args) {
-    Tokenizer tokenizer = new Tokenizer();
-    // String assemblyCode = "ADD x1 x2 x1\nHALT\nHALT";
-    String assemblyCode = "num .FILL 10";
 
-    List<Tokenizer.Token> tokens = tokenizer.tokenize(assemblyCode);
-    Parser parser = new Parser(tokens);
-    List<ASTNode> ast = parser.parseProgram();
+    Tokenizer tokenizer = new Tokenizer();
+    // String assemblyCode = "ADD x1 x2 x1\nHALT";
+    // String assemblyCode = "HALT";
+    // String assemblyCode = "num .FILL 10\n HALT\n start ADD x1 x2 x3
+    // dsadasdasdasdsdsad asdas";
+    // String assemblyCode = "ADD x1 x2 x1 dsadsa dsa das das d as\n HALT";
+    // String assemblyCode = "start add x1 x2 x3";
+    String assemblyCode = "lw x0 x1 five\nfive .fill 5 ";
+    // String assemblyCode = "five .fill 5 \n lw x0 x1 five";
+    // String assemblyCode = "five .fill 5";
+
+    List<Tokenizer.Token> tokens1 = tokenizer.tokenize(assemblyCode);
+    // List<Tokenizer.Token> tokens2 = tokenizer.tokenize(assemblyCode);
+
+    Parser parser1 = new Parser(tokens1);
+    // Parser parser2 = new Parser(tokens2);
+
+    List<List<ASTNode>> ast1 = parser1.parseProgram();
 
     // Generate machine code from AST
     CodeGenerator codeGen = new CodeGenerator();
-    for (ASTNode node : ast) {
-      // node.accept(codeGen);
-      System.out.println(node.toString());
+    for (List<ASTNode> nodes : ast1) {
+      for (ASTNode node : nodes) {
+        // System.out.println(node.toString());
+        node.firstAccept(codeGen);
+      }
     }
 
+    // parser1.setVariables(codeGen.getVariableMap());
+    // parser2.setVariables(parser1.getVariables());
+    // List<List<ASTNode>> ast2 = parser2.parseProgram();
+
+    for (List<ASTNode> nodes : ast1) {
+      for (ASTNode node : nodes) {
+        // System.out.println(node.toString());
+        node.accept(codeGen);
+      }
+    }
+
+    /* Morph codeGen.variableMap to parser.variables */
+    // System.out.println(codeGen.getVariableMap().get("five"));
+    // System.out.println(parser.getSymbolicInteger("five"));
+
     // Output the generated machine code
-    // System.out.println("Generated Machine Code:");
-    // System.out.println(codeGen.getMachineCode());
+    System.out.println("Generated Machine Code:");
+    System.out.println(codeGen.getMachineCode());
+
   }
 }
