@@ -1,0 +1,32 @@
+        lw          0           1           n        ; Load n into $1
+        lw          0           2           r        ; Load r into $2
+        lw          0           7           stack    ; Initialize stack pointer
+        lw          0           5           combAdr  ; Prepare to call combination subroutine
+        jalr        5           6                    ; Call combination function
+        halt                                         ; End of program
+comb    add         7           4           7        ; Decrement stack pointer
+        sw          7           6           0        ; Save return address on stack
+        add         7           4           7        ; Decrement stack pointer
+        sw          7           1           0        ; Save $1 👎 on stack
+        add         7           4           7        ; Decrement stack pointer
+        sw          7           2           0        ; Save $2 (r) on stack
+        beq         2           0           baseCase1 ; if r == 0, return 1
+        beq         1           2           baseCase1 ; if n == r, return 1
+        lw          0           4           neg1     ; Prepare for n-1
+        add         1           4           1        ; n = n - 1
+        jalr        5           6                    ; Call combination(n-1, r)
+        lw          7           2           0        ; Restore $2 (r) from stack
+        add         7           4           7        ; Increment stack pointer
+        lw          7           1           0        ; Restore $1 👎 from stack
+        add         7           4           7        ; Increment stack pointer
+        lw          7           6           0        ; Restore return address from stack
+        add         7           4           7        ; Increment stack pointer
+        jalr        6           0                    ; Return from subroutine
+baseCase1        lw          0           3           one      ; return 1
+        jalr        6           0                    ; Return from subroutine
+n        .fill        7          ; Example n = 7
+r        .fill        3          ; Example r = 3
+one      .fill        1
+neg1     .fill        -1
+combAdr  .fill        comb      ; Address of combination subroutine
+stack    .fill        0           ; Stack start (initially empty)

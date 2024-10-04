@@ -5,18 +5,25 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Test {
-  public static void main(String[] args) {
-    try {
-      // Path to the text file
-      String filePath = "assemblyCode.txt";
 
-      // Read all lines from the file and join them with '\n'
-      String content = String.join("\n", Files.readAllLines(Paths.get(filePath)));
-
-      // Print the resulting string
-      System.out.println(content);
-    } catch (IOException e) {
-      e.printStackTrace();
+  public static int BinaryToDecimal(String bin) {
+    int decimalNumber = 0, i = 0;
+    long remainder;
+    long num = Long.parseLong(bin);
+    while (num != 0) {
+      remainder = num % 10;
+      num /= 10;
+      decimalNumber += remainder * Math.pow(2, i);
+      ++i;
     }
+
+    return decimalNumber;
+  }
+
+  public static void main(String[] args) {
+    String bin = "1010101010101010101010101";
+    // System.out.println(BinaryToDecimal(bin));
+    long dec = Long.parseLong(bin, 2);
+    System.out.println(dec);
   }
 }

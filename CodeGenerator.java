@@ -1,6 +1,7 @@
 import java.util.*;
 
 public class CodeGenerator implements NodeVisitor {
+
   private StringBuilder machineCode = new StringBuilder();
 
   // Mapping for instruction encodings
@@ -8,11 +9,21 @@ public class CodeGenerator implements NodeVisitor {
   private Map<String, String> registerMap = new HashMap<>();
 
   private Map<String, Integer> variableMap = new HashMap<>();
-  private Map<String, String> addressMap = new HashMap<>();
+  private Map<String, Integer> addressMap = new HashMap<>();
 
   public Map<String, Integer> getVariableMap() {
     return variableMap;
   }
+
+  private Map<String, Integer> getAddressMap() {
+    return addressMap;
+  }
+
+  public void setAddressMap(Map<String, Integer> addressMap) {
+    this.addressMap = addressMap;
+  }
+
+  private int currentAddress = 0;
 
   public CodeGenerator() {
 
@@ -41,6 +52,52 @@ public class CodeGenerator implements NodeVisitor {
 
   public String getMachineCode() {
     return machineCode.toString();
+  }
+
+  public String getDecMachineCode() {
+    return convertBinaryStream(new StringBuilder(machineCode.toString())).toString();
+  }
+
+  // Function to convert binary strings to decimal and retain decimals as is
+  public static StringBuilder convertBinaryStream(StringBuilder input) {
+    StringBuilder output = new StringBuilder();
+
+    // Split the input by newline to get individual lines
+    String[] lines = input.toString().split("\n");
+
+    for (String line : lines) {
+      if (isBinaryString(line)) {
+        // Convert binary string to decimal and append to output
+        long decimalValue = Long.parseLong(line, 2);
+        output.append(decimalValue).append("\n");
+      } else {
+        // Retain decimal numbers as is and append to output
+        output.append(line).append("\n");
+      }
+    }
+
+    return output;
+  }
+
+  // Function to check if a string is a valid 25-bit binary string
+  public static boolean isBinaryString(String input) {
+    // Check if the input contains exactly 25 characters and only '0' or '1'
+    return input.length() == 25 && input.matches("[01]+");
+  }
+
+  // Function to convert a decimal number to 2's complement 16-bit binary string
+  public static String toTwosComplement16Bit(int number) {
+    // Check if the number fits in 16-bit signed range
+    if (number < -32768 || number > 32767) {
+      throw new IllegalArgumentException("Number out of 16-bit range");
+    }
+
+    // Convert to 2's complement 16-bit representation
+    short twosComplement = (short) number; // short is 16-bit in Java
+
+    // Return the result in 16-bit binary format
+    return String.format("%16s", Integer.toBinaryString(twosComplement & 0xFFFF))
+        .replace(' ', '0');
   }
 
   public void firstVisit(InstructionNode node) {
@@ -79,9 +136,8 @@ public class CodeGenerator implements NodeVisitor {
     } else {
       throw new IllegalArgumentException("Unknown instruction: " + node.getInstruction());
     }
-
     machineCode.append("\n");
-
+    currentAddress++;
   }
 
   public void fillFirstVisit(InstructionNode node) {
@@ -96,8 +152,12 @@ public class CodeGenerator implements NodeVisitor {
 
     // Get the value
     if (node.getOperands().get(1) instanceof LabelNode) {
-      String value = node.getOperands().get(1).getValue();
-      addressMap.put(name, value);
+      String label = node.getOperands().get(1).getValue();
+      if (addressMap.get(label) == null) {
+        throw new IllegalArgumentException("Unknown label: " + node.getOperands().get(1).getValue());
+      }
+      int value = addressMap.get(label);
+      variableMap.put(name, value);
       // machineCode.append(value);
     } else if (node.getOperands().get(1) instanceof NumberNode) {
       NumberNode immediateNode = (NumberNode) node.getOperands().get(1);
@@ -121,8 +181,12 @@ public class CodeGenerator implements NodeVisitor {
 
     // Get the value
     if (node.getOperands().get(1) instanceof LabelNode) {
-      String value = node.getOperands().get(1).getValue();
-      addressMap.put(name, value);
+      String label = node.getOperands().get(1).getValue();
+      if (addressMap.get(label) == null) {
+        throw new IllegalArgumentException("Unknown label: " + node.getOperands().get(1).getValue());
+      }
+      int value = addressMap.get(label);
+      variableMap.put(name, value);
       machineCode.append(value);
     } else if (node.getOperands().get(1) instanceof NumberNode) {
       NumberNode immediateNode = (NumberNode) node.getOperands().get(1);
@@ -139,45 +203,63 @@ public class CodeGenerator implements NodeVisitor {
 
     machineCode.append(opCode); // Bits 24-22 opcode
 
-    ((RegisterNode) node.getOperands().get(2)).accept(this); // Bits 21-19 regA (rs)
+    ((NumberNode) node.getOperands().get(2)).accept(this); // Bits 21-19 regA (rs)
 
-    ((RegisterNode) node.getOperands().get(1)).accept(this); // Bits 18-16 regB (rt)
+    ((NumberNode) node.getOperands().get(1)).accept(this); // Bits 18-16 regB (rt)
 
     machineCode.append("0000000000000"); // Bits 15-3 Not used
 
     // Bits 2-0 Destination register (rd)
-    ((RegisterNode) node.getOperands().get(0)).accept(this);
+    ((NumberNode) node.getOperands().get(0)).accept(this);
 
   }
 
   public void iTypeVisit(InstructionNode node, String opCode) {
-    int imm;
+
+    long imm;
+    String immediate;
     // Expecting the immediate to be the first operand
     if (node.getOperands().get(2) instanceof LabelNode) {
-      imm = (variableMap.get(node.getOperands().get(2).getValue())) & 0xFFF;
+      String label = node.getOperands().get(2).getValue();
+      if (addressMap.get(label) != null) {
+        if (node.getInstruction().equals("LW") || node.getInstruction().equals("SW")) {
+          imm = addressMap.get(label) & 0xFFF;
+        } else {
+          // BEQ
+          // Calculate the relative offset
+          imm = (addressMap.get(label) - currentAddress - 1);
+        }
+
+      } else {
+        throw new IllegalArgumentException("Unknown label: " + node.getOperands().get(2).getValue());
+      }
 
     } else {
       NumberNode immediateNode = (NumberNode) node.getOperands().get(2);
       imm = immediateNode.getNumber() & 0xFFF; // Mask to get the lower 12 bits
     }
 
-    RegisterNode rsNode = (RegisterNode) node.getOperands().get(1);
-    RegisterNode rtNode = (RegisterNode) node.getOperands().get(0);
+    immediate = toTwosComplement16Bit((int) imm);
+
+    NumberNode rsNode = (NumberNode) node.getOperands().get(1);
+    NumberNode rtNode = (NumberNode) node.getOperands().get(0);
 
     // Get the immediate value
-    String immediate = String.format("%016d", Integer.parseInt(Integer.toBinaryString(imm)));
+    // String immediate = String.format("%016d",
+    // Long.parseLong(Long.toBinaryString(imm)));
 
     // Build the machine code
     machineCode.append(opCode); // immediate
     rtNode.accept(this); // Destination register (rd)
     rsNode.accept(this);
-    machineCode.append(" ").append(immediate); // opcode
+    machineCode.append("").append(immediate); // opcode
+
   }
 
   public void oTypeVisit(InstructionNode node, String opCode) {
     // Bits 24-22 opcode
     // Bits 21-0 Not Used
-    machineCode.append(opCode).append(" 0000000000000000000000");
+    machineCode.append(opCode).append("0000000000000000000000");
   }
 
   public void jTypeVisit(InstructionNode node, String opCode) {
@@ -186,16 +268,16 @@ public class CodeGenerator implements NodeVisitor {
     // Bits 18-16 reg B (rd)
     // Bits 15-0 Not Used
     machineCode.append(opCode);
-    ((RegisterNode) node.getOperands().get(0)).accept(this); // Bits 18-16 regB (rt)
-    ((RegisterNode) node.getOperands().get(1)).accept(this); // Bits 18-16 regB (rt)
-    machineCode.append(" 0000000000000000");
+    ((NumberNode) node.getOperands().get(0)).accept(this); // Bits 18-16 regB (rt)
+    ((NumberNode) node.getOperands().get(1)).accept(this); // Bits 18-16 regB (rt)
+    machineCode.append("0000000000000000");
   }
 
   @Override
   public void visit(RegisterNode node) {
     // Lookup the machine code for the register
     String registerCode = registerMap.getOrDefault(node.getRegister(), "????");
-    machineCode.append(" ").append(registerCode);
+    machineCode.append("").append(registerCode);
   }
 
   @Override
@@ -205,31 +287,56 @@ public class CodeGenerator implements NodeVisitor {
 
   @Override
   public void visit(NumberNode node) {
-    machineCode.append(" ").append(node.getNumber());
+    String value = String.format("%03d", Integer.parseInt(Integer.toBinaryString(node.getNumber())));
+    machineCode.append("").append(value);
+  }
+
+  public static int BinaryToDecimal(String bin) {
+    int decimalNumber = 0, i = 0;
+    long remainder;
+    long num = Long.parseLong(bin);
+    while (num != 0) {
+      remainder = num % 10;
+      num /= 10;
+      decimalNumber += remainder * Math.pow(2, i);
+      ++i;
+    }
+
+    return decimalNumber;
   }
 
   public static void main(String[] args) {
+
     Tokenizer tokenizer = new Tokenizer();
-    String assemblyCode = "add x1 x2 x3 \n num .FILL 10";
+    // String assemblyCode = "add 1 2 1";
     // String assemblyCode = "HALT";
-    // String assemblyCode = "num .FILL 10";
+    String assemblyCode = "lw 0 1 five \n five .fill 5";
 
     List<Tokenizer.Token> tokens = tokenizer.tokenize(assemblyCode);
+
     Parser parser = new Parser(tokens);
-    List<List<ASTNode>> ast = parser.parseProgram();
+
+    List<List<ASTNode>> ast1 = parser.parseProgram();
+    CodeGenerator codeGen = new CodeGenerator();
+    codeGen.setAddressMap(parser.getAddressMap());
 
     // Generate machine code from AST
-    CodeGenerator codeGen = new CodeGenerator();
-    for (List<ASTNode> nodes : ast) {
+
+    for (List<ASTNode> nodes : ast1) {
       for (ASTNode node : nodes) {
-        // System.out.println(node.toString());
-        node.accept(codeGen);
+        node.firstAccept(codeGen);
       }
     }
 
-    // Output the generated machine code
+    for (List<ASTNode> nodes : ast1) {
+      for (ASTNode node : nodes) {
+        node.accept(codeGen);
+      }
+    }
     System.out.println("Generated Machine Code:");
     System.out.println(codeGen.getMachineCode());
+
+    // System.out.println(codeGen.getVariableMap().get("stAddr"));
 
   }
 }

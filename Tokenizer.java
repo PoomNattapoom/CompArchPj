@@ -168,8 +168,8 @@ public class Tokenizer {
         continue;
       } else if (isInstruction(part.toUpperCase())) {
         tokens.add(new Token(part.toUpperCase(), TokenType.INSTRUCTION));
-      } else if (isRegister(part.toLowerCase())) {
-        tokens.add(new Token(part.toLowerCase(), TokenType.REGISTER));
+        // } else if (isRegister(part.toLowerCase())) {
+        // tokens.add(new Token(part.toLowerCase(), TokenType.REGISTER));
       } else if (isNumber(part)) {
         tokens.add(new Token(part, TokenType.NUMBER));
       } else if (part.matches("[A-Za-z0-9_]*")) {
@@ -204,7 +204,8 @@ public class Tokenizer {
     // String assemblyCode = "ADD x1 x2 x1\nHALT\nnum .FILL 10";
     // String assemblyCode = "ADD x1 x2 x1 hello world";
     // String assemblyCode = "HALT";
-    String assemblyCode = "num .FILL 10";
+    // String assemblyCode = "num .FILL 10";
+    String assemblyCode = "lw 0 1 five load reg1 with 5 (uses symbolic address)";
 
     List<Token> tokens = tokenizer.tokenize(assemblyCode);
     for (Token token : tokens) {

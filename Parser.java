@@ -18,6 +18,10 @@ public class Parser {
     return variables;
   }
 
+  public Map<String, Integer> getAddressMap() {
+    return addressMap;
+  }
+
   private void setVariables(Map<String, Integer> variables) {
     this.variables = variables;
   }
@@ -57,19 +61,12 @@ public class Parser {
     if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
       // System.out.println("Label: " + currentToken.getValue());
       label = currentToken.getValue();
+      if (addressMap.containsKey(label)) {
+        throw new IllegalArgumentException("Label already defined: " + label);
+      }
       defineLabel(label, currentAddress);
       advance(); // Move to the next token
     }
-
-    // How to get the address of a label
-    // System.out.println(labels.get("start").getAddress());
-
-    // line.add(new LabelNode(label));
-    // Add the label for each line
-    // line.add(new LabelNode(label));
-
-    // System.out.println("Current token: " + currentToken.getValue() + " (Type: " +
-    // currentToken.getType() + ")");
 
     if (currentToken.getValue().equals(".FILL")) {
       advance(); // Move to the number after .FILL
@@ -77,6 +74,11 @@ public class Parser {
         NumberNode numberNode = new NumberNode(Integer.parseInt(currentToken.getValue()));
         variables.put(label, numberNode.getNumber());
         ASTNode instruction = new InstructionNode(".FILL", new LabelNode(label), numberNode);
+        line.add(instruction);
+        advance();
+      } else if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
+        LabelNode labelNode = new LabelNode(currentToken.getValue());
+        ASTNode instruction = new InstructionNode(".FILL", new LabelNode(label), labelNode);
         line.add(instruction);
         advance();
       } else {
@@ -98,9 +100,6 @@ public class Parser {
         currentAddress++;
         return line;
       }
-      if (currentToken.getType() != Tokenizer.TokenType.LABEL) {
-        throw new IllegalArgumentException("Invalid token: " + currentToken.getValue());
-      }
       advance();
     }
 
@@ -112,11 +111,6 @@ public class Parser {
 
   private void defineLabel(String name, int address) {
     addressMap.put(name, address);
-  }
-
-  public Integer getLabelAddress(String name) {
-    Label label = labels.get(name);
-    return (label != null && label.isDefined()) ? label.getAddress() : null;
   }
 
   public Integer getSymbolicInteger(String name) {
@@ -208,13 +202,15 @@ public class Parser {
   public static void main(String[] args) {
 
     Tokenizer tokenizer = new Tokenizer();
-    // String assemblyCode = "ADD x1 x2 x1\nHALT";
+    String assemblyCode = "add 1 2 1";
     // String assemblyCode = "HALT";
     // String assemblyCode = "num .FILL 10\n HALT\n start ADD x1 x2 x3
     // dsadasdasdasdsdsad asdas";
     // String assemblyCode = "ADD x1 x2 x1 dsadsa dsa das das d as\n HALT";
     // String assemblyCode = "start add x1 x2 x3";
-    String assemblyCode = "lw x0 x1 five\nfive .fill 5 ";
+    // String assemblyCode = "lw x0 x1 five\nfive .fill 5 ";
+    // String assemblyCode = "lw x0 x1 five load reg1 with 5 (uses symbolic address)
+    // \n five .fill 5";
     // String assemblyCode = "five .fill 5 \n lw x0 x1 five";
     // String assemblyCode = "five .fill 5";
 
