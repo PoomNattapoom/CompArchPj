@@ -55,7 +55,6 @@ int main (int argc, char *argv[]) {
 
             case 4:  // BEQ
                 offset = instruction & 0xFFFF;
-                printf(offset[]);
                 if (state.reg[regA] == state.reg[regB]) {
                     state.pc += offset;
                 }else{
