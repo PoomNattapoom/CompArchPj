@@ -5,7 +5,7 @@
 
 #define MAXLINELENGTH 1000
 
-int main (int argc, char *argv) {
+int main (int argc, char *argv[]) {
     if (argc != 2) {
         printf("error : usage : %s <machine-code file>\n", argv[0]);
         exit(1);
@@ -55,10 +55,14 @@ int main (int argc, char *argv) {
 
             case 4:  // BEQ
                 offset = instruction & 0xFFFF;
+                printf(offset[]);
                 if (state.reg[regA] == state.reg[regB]) {
                     state.pc += offset;
+                }else{
+                    state.pc-=offset;
+                    break;
                 }
-                break;
+
 
             case 5:  // JALR
                 state.reg[regB] = state.pc;
@@ -78,7 +82,7 @@ int main (int argc, char *argv) {
                 return 1;
         }
 
-        UpdatePC(&state); // Update PC after executing instruction
+        updatePC(&state); // Update PC after executing instruction
     }
 
     printState(&state); // Print state before exiting
@@ -86,17 +90,17 @@ int main (int argc, char *argv) {
 }
 
 /* Initialize machine state: Set PC to 0 and registers to 0 */
-void initMachineState(MachineState *state) {
+void initMachineStates(MachineState *state) {
     state->pc = 0;
     memset(state->reg,0, sizeof(state->reg));
 }
 
 /* Load machine code into memory from file */
 void loadMemory(MachineState *state, char *filename) {
-    File *filePtr = fopen(filename, "r");
+    FILE *filePtr = fopen(filename, "r");
     char line[MAXLINELENGTH];
 
-    if (filePtr == null) {
+    if (filePtr == NULL) {
         printf("error : can't open file %s\n", filename);
         perror("fopen");
         exit(1);
@@ -118,7 +122,7 @@ void loadMemory(MachineState *state, char *filename) {
 /* Print the current state of the machine */
 void printState(MachineState *statePtr) {
     int i;
-    printf("\n@@@\nstate:\n");
+    printf("\n__________________________________________\nstate:\n");
     printf("\tpc %d\n", statePtr->pc);
     printf("\tmemory:\n");
     for(i=0; i<statePtr->numMemory; i++) {
@@ -129,4 +133,19 @@ void printState(MachineState *statePtr) {
         printf("\t\treg[ %d ] %d\n", i, statePtr->reg[i]);
     }
     printf("end state\n");
+}
+
+/* Fetch the instruction at the current PC */
+int fetch(MachineState *state){
+    return state->mem[state->pc]; //return the instruction at PC
+}
+
+/* Halt the simulator */
+void halt(){
+    printf("Halt instruction encountered. Stopping simulation. \n");
+}
+
+/* Increment the PC to point to the next instruction */
+void updatePC(MachineState *state){
+    state->pc += 1; //increment PC
 }
