@@ -16,7 +16,7 @@ typedef struct {
 void initMachineStates(MachineState *state);
 void loadMemory(MachineState *state, char *filename);
 int fetch(MachineState *state);
-void UpdatePC(MachineState *state);
+void updatePC(MachineState *state);
 void halt();
 void printState(MachineState *state);
 
