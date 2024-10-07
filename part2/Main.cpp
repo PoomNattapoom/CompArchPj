@@ -45,28 +45,35 @@ int main (int argc, char *argv[]) {
 
             case 2:  // LW
                 offset = instruction & 0xFFFF;
+                if (offset & (1 << 15)) {
+                    offset -= (1 << 16);
+                }
                 state.reg[regB] = state.mem[state.reg[regA] + offset];
                 break;
 
             case 3:  // SW
                 offset = instruction & 0xFFFF;
+                if (offset & (1 << 15)) { 
+                    offset -= (1 << 16);
+                }
                 state.mem[state.reg[regA] + offset] = state.reg[regB];
                 break;
 
             case 4:  // BEQ
                 offset = instruction & 0xFFFF;
+                if (offset & (1 << 15)) {
+                    offset -= (1 << 16);
+                }
                 if (state.reg[regA] == state.reg[regB]) {
                     state.pc += offset;
-                }else{
-                    state.pc-=offset;
-                    break;
                 }
-
+                break;
 
             case 5:  // JALR
-                state.reg[regB] = state.pc;
-                state.pc = state.reg[regA];
+                state.reg[regB] = state.pc + 1;
+                state.pc = state.reg[regA];   
                 break;
+
 
             case 6:  // HALT
                 printf("machine halted\n");
