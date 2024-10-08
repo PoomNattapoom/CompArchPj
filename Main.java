@@ -34,7 +34,7 @@ public class Main {
 
     try {
       // Path to the text file
-      String filePath = "assembly/test.txt";
+      String filePath = "assembly/example.txt";
 
       // Read all lines from the file and join them with '\n'
       String assemblyCode = String.join("\n", Files.readAllLines(Paths.get(filePath)));
@@ -70,7 +70,7 @@ public class Main {
       System.out.println(codeGen.getDecMachineCode());
 
       writeStringToFile(codeGen.getDecMachineCode(),
-          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\assembly\\output.txt");
+          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\part2\\assembly.txt");
 
     } catch (IOException e) {
       e.printStackTrace();
