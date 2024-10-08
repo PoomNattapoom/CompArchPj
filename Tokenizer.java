@@ -145,13 +145,13 @@ public class Tokenizer {
   public List<Token> tokenize(String input) {
     List<Token> tokens = new ArrayList<>();
     // Split the input by newlines to preserve them
-    String[] lines = input.split("(?<=\n)|(?=\n)"); // Split while preserving newlines
+    String[] words = input.split("(?<=\n)|(?=\n)"); // Split while preserving newlines
 
-    for (String line : lines) {
-      if (line.equals("\n") || line.equals("\r") || line.equals("\r\n")) {
-        tokens.add(new Token(line, TokenType.NEWLINE)); // Add newline as a token
+    for (String word : words) {
+      if (word.equals("\n") || word.equals("\r") || word.equals("\r\n")) {
+        tokens.add(new Token(word, TokenType.NEWLINE)); // Add newline as a token
       } else {
-        tokens.addAll(tokenizeLine(line));
+        tokens.addAll(tokenizeLine(word));
       }
     }
 
@@ -159,9 +159,9 @@ public class Tokenizer {
   }
 
   // Method to tokenize each line of assembly code
-  public List<Token> tokenizeLine(String line) {
+  public List<Token> tokenizeLine(String word) {
     List<Token> tokens = new ArrayList<>();
-    String[] parts = line.split("\\s+|(?=[,()])|(?<=[,()])"); // Splits by spaces, commas, and parentheses
+    String[] parts = word.split("\\s+|(?=[,()])|(?<=[,()])"); // Splits by spaces, commas, and parentheses
 
     for (String part : parts) {
       if (part.isEmpty()) {
@@ -183,17 +183,17 @@ public class Tokenizer {
   }
 
   // Helper methods to identify token types
-  private boolean isInstruction(String token) {
+  private boolean isInstruction(String word) {
     // Add more instructions as necessary
-    return token.matches("ADD|NAND|LW|SW|BEQ|JALR|HALT|NOOP|.FILL");
+    return word.matches("ADD|NAND|LW|SW|BEQ|JALR|HALT|NOOP|.FILL");
   }
 
-  private boolean isRegister(String token) {
-    return token.matches("x[0-9]+");
+  private boolean isRegister(String word) {
+    return word.matches("x[0-9]+");
   }
 
-  private boolean isNumber(String token) {
-    return token.matches("-?\\d+") || token.matches("0[xX][0-9a-fA-F]+");
+  private boolean isNumber(String word) {
+    return word.matches("-?\\d+") || word.matches("0[xX][0-9a-fA-F]+");
   }
 
   // Main method for testing
@@ -205,7 +205,7 @@ public class Tokenizer {
     // String assemblyCode = "ADD x1 x2 x1 hello world";
     // String assemblyCode = "HALT";
     // String assemblyCode = "num .FILL 10";
-    String assemblyCode = "lw 0 1 five load reg1 with 5 (uses symbolic address)";
+    String assemblyCode = "start    add     1        2        1        decrement reg1";
 
     List<Token> tokens = tokenizer.tokenize(assemblyCode);
     for (Token token : tokens) {
