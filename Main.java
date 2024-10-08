@@ -34,7 +34,7 @@ public class Main {
 
     try {
       // Path to the text file
-      String filePath = "assembly/example.txt";
+      String filePath = "assembly/multiply.txt";
 
       // Read all lines from the file and join them with '\n'
       String assemblyCode = String.join("\n", Files.readAllLines(Paths.get(filePath)));
