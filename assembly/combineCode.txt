@@ -1,0 +1,40 @@
+lw          0           1           n        ; Load n into $1
+        lw          0           2           r        ; Load r into $2
+main    lw          0           5           stack    ; Load stack pointer into $5
+        lw          0           7           returnAdr ; Load return address into $7
+        lw          0           4           zero     ; Set $4 to 0 (used for comparison)
+        jalr        5           6                    ; Call combination function
+done    halt                                         ; End of program
+comb    sw          5           7           0        ; Save return address on stack
+        add        5           6           5       ; increment stack pointer
+        sw          5           1           0        ; Save $1 👎 on stack
+        add        5           6           5       ; increment stack pointer
+        sw          5           2           0        ; Save $2 (r) on stack
+        add        5           6           5       ; increment stack pointer
+        sw          5           4           0        ; Save local variable $4 on stack
+        beq         1           2          3 ; If n == r, return 1 (base case)
+        beq         2           0        2 ; If r == 0, return 1 (base case)
+        add        1           6           1       ; n = n - 1
+        jalr        5           6                    ; Recursive call Comb(n-1, r)
+        lw          5           3           0        ; Load result of Comb(n-1, r) into $3
+        add        5           6           5        ; Increment stack pointer
+        lw          5           1           0        ; Load original n back into $1
+        add        1           6           1       ; n = n - 1
+        add        2           6           2       ; r = r - 1
+        jalr        5           6                    ; Recursive call Comb(n-1, r-1)
+        lw          5           4           0        ; Load result of Comb(n-1, r-1) into $4
+        add         3           3           4        ; Sum the results of the two recursive calls
+pop     add        5           6           5        ; Increment stack pointer
+        lw          4           5           0        ; Load local variable $4 from stack
+        add        5           6           5        ; Increment stack pointer
+        lw          2           5           0        ; Load original $2 (r) from stack
+        add        5           6           5        ; Increment stack pointer
+        lw          1           5           0        ; Load original $1 👎 from stack
+        add        5           6           5        ; Increment stack pointer
+        lw          7           5           0        ; Load original return address from stack
+        jalr        5           6                    ; Return to caller
+n       .fill       5                                ; Example value for n
+r       .fill       3                                ; Example value for r
+stack   .fill       0                                ; Initialize stack pointer
+returnAdr .fill     0                                ; Return address holder
+zero    .fill       0                                ; Zero constant
