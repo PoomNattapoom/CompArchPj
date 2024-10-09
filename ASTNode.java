@@ -74,38 +74,6 @@ class InstructionNode extends ASTNode {
 }
 
 // AST Node for a register (e.g., x0, x1)
-class RegisterNode extends ASTNode {
-    private String register;
-
-    public RegisterNode(String register) {
-        this.register = register;
-    }
-
-    public String getRegister() {
-        return register;
-    }
-
-    @Override
-    public void accept(NodeVisitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public void firstAccept(NodeVisitor visitor) {
-
-    }
-
-    @Override
-    public String toString() {
-        return "Register: " + register;
-    }
-
-    @Override
-    public String getValue() {
-        return register;
-    }
-}
-
 // AST Node for a label (e.g., LOOP, EXIT)
 class LabelNode extends ASTNode {
     private String label;
@@ -178,8 +146,6 @@ interface NodeVisitor {
     void firstVisit(InstructionNode node);
 
     void visit(InstructionNode node);
-
-    void visit(RegisterNode node);
 
     void visit(LabelNode node);
 
