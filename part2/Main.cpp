@@ -18,9 +18,12 @@ int main(int argc, char *argv[])
   initMachineStates(&state);
   loadMemory(&state, argv[1]);
 
+  int count = 0 ;
   /* Simulate machine instructions */
   while (1)
   {
+    count++;
+    if(count==20)break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
@@ -66,21 +69,36 @@ int main(int argc, char *argv[])
       state.mem[state.reg[regA] + offset] = state.reg[regB];
       break;
 
-    case 4: // BEQ
+    case 4:  // BEQ
       offset = instruction & 0xFFFF;
-      if (offset & (1 << 15))
-      {
-        offset -= (1 << 16);
+      if (offset & (1 << 15)) {
+        offset -= (1 << 16);  // Sign-extend the offset
       }
-      if (state.reg[regA] == state.reg[regB])
-      {
-        state.pc += offset;
+      if (state.reg[regA] == state.reg[regB]) {
+        if (offset == 0) {
+            printf("warning: BEQ has zero offset, preventing infinite loop\n");
+            state.pc += 1; // Move to next instruction to avoid looping
+        } else {
+            state.pc += offset;  // Apply the branch if condition is met
+        }
+      } else {
+        state.pc += 1; // No branch, move to next instruction
       }
       break;
 
-    case 5: // JALR
-      state.reg[regB] = state.pc + 1;
-      state.pc = state.reg[regA];
+      case 5:  // JALR
+      if (regA == regB) {
+        int tempPC = state.pc + 1;
+        state.pc = state.reg[regA];  // Jump to address in regA
+        state.reg[regB] = tempPC;    // Store PC+1 in regB
+      } else {
+        state.reg[regB] = state.pc + 1;
+        state.pc = state.reg[regA];  // Jump to address in regA
+      }
+      if (state.pc == state.reg[regB]) {
+        printf("warning: JALR may cause infinite loop, adjusting...\n");
+        state.pc += 1;  // Avoid self-jump to break potential loop
+      }
       break;
 
     case 6: // HALT
@@ -101,6 +119,7 @@ int main(int argc, char *argv[])
 
   printState(&state); // Print state before exiting
   return 0;
+  
 }
 
 /* Initialize machine state: Set PC to 0 and registers to 0 */
@@ -142,7 +161,7 @@ void loadMemory(MachineState *state, char *filename)
 void printState(MachineState *statePtr)
 {
   int i;
-  printf("\n__________________________________________\nstate:\n");
+  printf("\n@@@\nstate:\n");
   printf("\tpc %d\n", statePtr->pc);
   printf("\tmemory:\n");
   for (i = 0; i < statePtr->numMemory; i++)
