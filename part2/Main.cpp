@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
   while (1)
   {
     count++;
-    if(count==20)break;
+    if(count==6)break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
@@ -62,12 +62,18 @@ int main(int argc, char *argv[])
 
     case 3: // SW
       offset = instruction & 0xFFFF;
+      printf("Opcode SW detected. Offset before sign extension: %d\n", offset);
+
       if (offset & (1 << 15))
       {
         offset -= (1 << 16);
       }
+
+      printf("Offset after sign extension: %d\n", offset);
+
       state.mem[state.reg[regA] + offset] = state.reg[regB];
       break;
+
 
     case 4:  // BEQ
       offset = instruction & 0xFFFF;
