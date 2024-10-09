@@ -18,13 +18,13 @@ int main(int argc, char *argv[])
   initMachineStates(&state);
   loadMemory(&state, argv[1]);
 
-  int count = 0 ;
+  //int count = 0 ;
   /* Simulate machine instructions */
   while (1)
   {
-    count++;
-    if(count==6)break;
-    printState(&state); // Print state before executing instruction
+    // if(count==9)break;
+    // count++;
+    //printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
 
@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
       printf("Offset after sign extension: %d\n", offset);
 
       state.mem[state.reg[regA] + offset] = state.reg[regB];
+      state.numMemory= state.numMemory+=state.reg[7]; //update size for print more mem
       break;
 
 
@@ -93,19 +94,13 @@ int main(int argc, char *argv[])
       break;
 
       case 5:  // JALR
-      if (regA == regB) {
-        int tempPC = state.pc + 1;
-        state.pc = state.reg[regA];  // Jump to address in regA
-        state.reg[regB] = tempPC;    // Store PC+1 in regB
-      } else {
+        if (state.pc == state.reg[regB]) {
+          printf("Warning - Jalr infinity loop, Please check you code\n");
+          return 0;
+        }
         state.reg[regB] = state.pc + 1;
-        state.pc = state.reg[regA];  // Jump to address in regA
-      }
-      if (state.pc == state.reg[regB]) {
-        printf("warning: JALR may cause infinite loop, adjusting...\n");
-        state.pc += 1;  // Avoid self-jump to break potential loop
-      }
-      break;
+        state.pc = state.reg[regA]-1;  // Jump to address in regA-1 then updatePC
+        break;
 
     case 6: // HALT
       printf("machine halted\n");
@@ -119,11 +114,12 @@ int main(int argc, char *argv[])
       printf("error: illegal opcode %d\n", opcode);
       return 1;
     }
-
+    printf("____opcode is %d",opcode,"_____\n");
+    printState(&state);
     updatePC(&state); // Update PC after executing instruction
   }
 
-  printState(&state); // Print state before exiting
+  //printState(&state); // Print state before exiting
   return 0;
   
 }
@@ -179,7 +175,7 @@ void printState(MachineState *statePtr)
   {
     printf("\t\treg[ %d ] %d\n", i, statePtr->reg[i]);
   }
-  printf("end state\n");
+  printf("end state\n\n");
 }
 
 /* Fetch the instruction at the current PC */
