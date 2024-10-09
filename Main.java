@@ -34,7 +34,7 @@ public class Main {
 
     try {
       // Path to the text file
-      String filePath = "assembly/multiply.txt";
+      String filePath = "assembly/example.txt";
 
       // Read all lines from the file and join them with '\n'
       String assemblyCode = String.join("\n", Files.readAllLines(Paths.get(filePath)));
@@ -45,21 +45,21 @@ public class Main {
       Parser parser = new Parser(tokens);
       // Parser parser2 = new Parser(tokens2);
 
-      List<List<ASTNode>> ast1 = parser.parseProgram();
+      List<List<ASTNode>> ast = parser.parseProgram();
 
       // Generate machine code from AST
       CodeGenerator codeGen = new CodeGenerator();
 
       codeGen.setAddressMap(parser.getAddressMap());
 
-      for (List<ASTNode> nodes : ast1) {
+      for (List<ASTNode> nodes : ast) {
         for (ASTNode node : nodes) {
           // System.out.println(node.toString());
           node.firstAccept(codeGen);
         }
       }
 
-      for (List<ASTNode> nodes : ast1) {
+      for (List<ASTNode> nodes : ast) {
         for (ASTNode node : nodes) {
           node.accept(codeGen);
         }
@@ -68,13 +68,19 @@ public class Main {
       // Output the generated machine code
       System.out.println("Generated Machine Code:");
       System.out.println(codeGen.getDecMachineCode());
-
       writeStringToFile(codeGen.getDecMachineCode(),
-          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\part2\\assembly.txt");
+          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\assembly\\output\\test.txt");
 
     } catch (IOException e) {
       e.printStackTrace();
+    } catch (Exception e) {
+      writeStringToFile("error",
+          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\assembly\\output\\test.txt");
+      System.err.println(e.getMessage());
+      System.out.println("Process finished with exit code 1");
+      System.exit(1);
     }
-
+    System.out.println("Process finished with exit code 0");
+    System.exit(0);
   }
 }

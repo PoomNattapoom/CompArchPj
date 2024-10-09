@@ -6,17 +6,12 @@ public class CodeGenerator implements NodeVisitor {
 
   // Mapping for instruction encodings
   private Map<String, String> opcodeMap = new HashMap<>();
-  private Map<String, String> registerMap = new HashMap<>();
 
   private Map<String, Integer> variableMap = new HashMap<>();
   private Map<String, Integer> addressMap = new HashMap<>();
 
   public Map<String, Integer> getVariableMap() {
     return variableMap;
-  }
-
-  private Map<String, Integer> getAddressMap() {
-    return addressMap;
   }
 
   public void setAddressMap(Map<String, Integer> addressMap) {
@@ -39,15 +34,6 @@ public class CodeGenerator implements NodeVisitor {
     opcodeMap.put("HALT", "110");
     opcodeMap.put("NOOP", "111");
 
-    // Register mapping
-    registerMap.put("x0", "000");
-    registerMap.put("x1", "001");
-    registerMap.put("x2", "010");
-    registerMap.put("x3", "011");
-    registerMap.put("x4", "100");
-    registerMap.put("x5", "101");
-    registerMap.put("x6", "110");
-    registerMap.put("x7", "111");
   }
 
   public String getMachineCode() {
@@ -89,7 +75,7 @@ public class CodeGenerator implements NodeVisitor {
   public static String toTwosComplement16Bit(int number) {
     // Check if the number fits in 16-bit signed range
     if (number < -32768 || number > 32767) {
-      throw new IllegalArgumentException("Number out of 16-bit range");
+      throw new IllegalArgumentException("Number out of 16-bit range: " + number);
     }
 
     // Convert to 2's complement 16-bit representation
@@ -234,9 +220,11 @@ public class CodeGenerator implements NodeVisitor {
         throw new IllegalArgumentException("Unknown label: " + node.getOperands().get(2).getValue());
       }
 
-    } else {
+    } else if (node.getOperands().get(2) instanceof NumberNode) {
       NumberNode immediateNode = (NumberNode) node.getOperands().get(2);
-      imm = immediateNode.getNumber() & 0xFFF; // Mask to get the lower 12 bits
+      imm = immediateNode.getNumber(); // Mask to get the lower 12 bits
+    } else {
+      throw new IllegalArgumentException("Expected a number or label for immediate value");
     }
 
     immediate = toTwosComplement16Bit((int) imm);
@@ -271,13 +259,6 @@ public class CodeGenerator implements NodeVisitor {
     ((NumberNode) node.getOperands().get(0)).accept(this); // Bits 18-16 regB (rt)
     ((NumberNode) node.getOperands().get(1)).accept(this); // Bits 18-16 regB (rt)
     machineCode.append("0000000000000000");
-  }
-
-  @Override
-  public void visit(RegisterNode node) {
-    // Lookup the machine code for the register
-    String registerCode = registerMap.getOrDefault(node.getRegister(), "????");
-    machineCode.append("").append(registerCode);
   }
 
   @Override

@@ -1,1 +1,6 @@
-add add 1 2 3 hello world
+start add 1 2 1
+      lw 0 1 five
+      jalr 2 1
+      halt
+five .fill 5
+neg1 .fill -1

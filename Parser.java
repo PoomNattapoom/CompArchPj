@@ -58,7 +58,8 @@ public class Parser {
     // Parse Label first
     List<ASTNode> line = new ArrayList<>();
 
-    if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
+    if (currentToken.getType() == Tokenizer.TokenType.LABEL
+        && !currentToken.getValue().toUpperCase().matches("ADD|NAND|LW|SW|BEQ|JALR|HALT|NOOP|.FILL")) {
       // System.out.println("Label: " + currentToken.getValue());
       label = currentToken.getValue();
       if (addressMap.containsKey(label)) {
