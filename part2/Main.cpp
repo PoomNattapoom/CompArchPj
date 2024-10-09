@@ -18,13 +18,12 @@ int main(int argc, char *argv[])
   initMachineStates(&state);
   loadMemory(&state, argv[1]);
 
-  //int count = 0 ;
+  int instructionCount = 1 ;
   /* Simulate machine instructions */
   while (1)
   {
-    // if(count==9)break;
-    // count++;
-    //printState(&state); // Print state before executing instruction
+    //(debug)if(instructionCount==9)break;
+    printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
 
@@ -104,7 +103,7 @@ int main(int argc, char *argv[])
 
     case 6: // HALT
       printf("machine halted\n");
-      printf("total of %d instructions executed\n", state.pc);
+      printf("total of %d instructions executed\n", instructionCount);
       return 0;
 
     case 7: // NOOP
@@ -114,12 +113,13 @@ int main(int argc, char *argv[])
       printf("error: illegal opcode %d\n", opcode);
       return 1;
     }
-    printf("____opcode is %d",opcode,"_____\n");
-    printState(&state);
+    //(debug)printf("____opcode is %d",opcode,"_____\n");
+    //(debug)printState(&state);
+    instructionCount++;
     updatePC(&state); // Update PC after executing instruction
   }
 
-  //printState(&state); // Print state before exiting
+  printState(&state); // Print state before exiting
   return 0;
   
 }
