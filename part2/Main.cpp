@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   /* Simulate machine instructions */
   while (1)
   {
-    if(instructionCount==3)break;
+    if(instructionCount==300)break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
     case 2: // LW
       offset = instruction & 0xFFFF;
-      printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+      printf("Opcode LW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
 
       if (offset & (1 << 15))
       {
