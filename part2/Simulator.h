@@ -10,6 +10,7 @@ typedef struct {
     int mem[NUMMEMORY];
     int reg[NUMREGS];
     int numMemory;
+    int highestNumMemory;
 } MachineState;
 
 /* Function prototypes */
