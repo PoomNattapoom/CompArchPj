@@ -88,7 +88,6 @@ int main(int argc, char *argv[])
       if (state.reg[regA] == state.reg[regB]) {
         if (offset == 0) {
             printf("warning: BEQ has zero offset, Please check you input\n");
-            return 0;
         } else {
             state.pc += offset;  // Apply the branch if condition is met
         }
