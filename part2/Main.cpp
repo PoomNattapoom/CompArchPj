@@ -18,12 +18,11 @@ int main(int argc, char *argv[])
   initMachineStates(&state);
   loadMemory(&state, argv[1]);
 
-  int count = 0 ;
+  int instructionCount = 0 ;
   /* Simulate machine instructions */
   while (1)
   {
-    count++;
-    if(count==20)break;
+    if(instructionCount==3)break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
@@ -37,37 +36,49 @@ int main(int argc, char *argv[])
     int opcode = (instruction >> 22) & 0x7; // 22-24
     int regA = (instruction >> 19) & 0x7;   // 19-21
     int regB = (instruction >> 16) & 0x7;   // 16-18
-    int destReg, offset;
+    int destReg = 0, offset = 0;
 
     switch (opcode)
     {
     case 0:                        // ADD
       destReg = instruction & 0x7; // rd is in last 3 bits
-      state.reg[destReg] = state.reg[regA] + state.reg[regB];
+      // state.reg[destReg] = state.reg[regA] + state.reg[regB];
+      state.reg[regA] = state.reg[destReg] + state.reg[regB];
       break;
 
-    case 1:                        // SUB
-      destReg = instruction & 0x7; // rd is in last 3 bits
-      state.reg[destReg] = state.reg[regA] - state.reg[regB];
+    case 1:                        // NAND
+      destReg = instruction & 0x7; // Destination register is in the last 3 bits
+      state.reg[destReg] = ~(state.reg[regA] & state.reg[regB]); // NAND operation
       break;
+
 
     case 2: // LW
       offset = instruction & 0xFFFF;
+      printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+
       if (offset & (1 << 15))
       {
         offset -= (1 << 16);
       }
+      printf("Offset after sign extension: %d\n", offset);
       state.reg[regB] = state.mem[state.reg[regA] + offset];
       break;
 
     case 3: // SW
       offset = instruction & 0xFFFF;
+      printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+
       if (offset & (1 << 15))
       {
         offset -= (1 << 16);
       }
+      printf("Offset after sign extension: %d\n", offset);
       state.mem[state.reg[regA] + offset] = state.reg[regB];
+      if (state.numMemory + state.reg[7] > state.highestNumMemory) {
+        state.highestNumMemory = state.numMemory + state.reg[7];
+      } //update size for print more mem
       break;
+
 
     case 4:  // BEQ
       offset = instruction & 0xFFFF;
@@ -76,8 +87,8 @@ int main(int argc, char *argv[])
       }
       if (state.reg[regA] == state.reg[regB]) {
         if (offset == 0) {
-            printf("warning: BEQ has zero offset, preventing infinite loop\n");
-            state.pc += 1; // Move to next instruction to avoid looping
+            printf("warning: BEQ has zero offset, Please check you input\n");
+            return 0;
         } else {
             state.pc += offset;  // Apply the branch if condition is met
         }
@@ -87,23 +98,21 @@ int main(int argc, char *argv[])
       break;
 
       case 5:  // JALR
-      if (regA == regB) {
-        int tempPC = state.pc + 1;
-        state.pc = state.reg[regA];  // Jump to address in regA
-        state.reg[regB] = tempPC;    // Store PC+1 in regB
-      } else {
-        state.reg[regB] = state.pc + 1;
-        state.pc = state.reg[regA];  // Jump to address in regA
-      }
-      if (state.pc == state.reg[regB]) {
-        printf("warning: JALR may cause infinite loop, adjusting...\n");
-        state.pc += 1;  // Avoid self-jump to break potential loop
-      }
-      break;
+        if (regA == regB) {
+          int tempPC = state.pc + 1;
+          state.pc = state.reg[regA];  // Jump to address in regA
+          state.reg[regB] = tempPC;     // Store PC+1 in regB
+        } else {
+          state.reg[regB] = state.pc + 1; // Store PC+1 in regB
+          int targetAddress = state.reg[regA] - 1; // Adjust target address
+          state.pc = targetAddress; // Jump to adjusted address
+        }
+        break;
+
 
     case 6: // HALT
       printf("machine halted\n");
-      printf("total of %d instructions executed\n", state.pc);
+      printf("total of %d instructions executed\n", instructionCount+1);
       return 0;
 
     case 7: // NOOP
@@ -113,7 +122,9 @@ int main(int argc, char *argv[])
       printf("error: illegal opcode %d\n", opcode);
       return 1;
     }
-
+    printf("____opcode is %d",opcode,"_____\n");
+    //printState(&state);
+    instructionCount++;
     updatePC(&state); // Update PC after executing instruction
   }
 
@@ -155,6 +166,7 @@ void loadMemory(MachineState *state, char *filename)
   }
 
   fclose(filePtr);
+  state->highestNumMemory = state->numMemory;
 }
 
 /* Print the current state of the machine */
@@ -164,7 +176,7 @@ void printState(MachineState *statePtr)
   printf("\n@@@\nstate:\n");
   printf("\tpc %d\n", statePtr->pc);
   printf("\tmemory:\n");
-  for (i = 0; i < statePtr->numMemory; i++)
+  for (i = 0; i < statePtr->highestNumMemory; i++)
   {
     printf("\t\tmem[ %d ] %d\n", i, statePtr->mem[i]);
   }
@@ -173,7 +185,7 @@ void printState(MachineState *statePtr)
   {
     printf("\t\treg[ %d ] %d\n", i, statePtr->reg[i]);
   }
-  printf("end state\n");
+  printf("end state\n\n");
 }
 
 /* Fetch the instruction at the current PC */
