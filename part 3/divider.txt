@@ -1,14 +1,14 @@
 
-        lw          0           1           dividend      # Load dividend into $1
-        lw          0           2           divisor       # Load divisor into $2
-        lw          0           3           quotient      # Initialize quotient (0) into $3
-        lw          0           4           remainder     # Initialize remainder (0) into $4
+        lw          0           1           dvd     # Load dividend into $1
+        lw          0           2           dvs       # Load divisor into $2
+        lw          0           3           quot      # Initialize quotient (0) into $3
+        lw          0           4           remain     # Initialize remainder (0) into $4
         lw          0           7           stack         # Initialize stack pointer
-        lw          0           5           divideAdr     # Prepare to call divide subroutine
+        lw          0           5           dvAd     # Prepare to call divide subroutine
         jalr        5           6                        # Call divide function
         
         # Call done function after division
-        lw          0           5           doneAdr       # Prepare to call done function
+        lw          0           5           doneAd       # Prepare to call done function
         jalr        5           0                        # Call done function
 
 divide:
@@ -23,22 +23,22 @@ divide:
         sw          7           4           stack         # Save $4 (remainder) on stack
         add         7           1           7             # Increment stack pointer
 
-division_loop:
+dvsloop:
         beq         1           0           done          # If dividend == 0, go to done
-        beq         2           0           halt_call     # If divisor == 0, call halt (error)
+        beq         2           0           halcall     # If divisor == 0, call halt (error)
 
-        beq         1           2           quotient_add  # If dividend == divisor, quotient is 1
+        beq         1           2           quotad  # If dividend == divisor, quotient is 1
         lw          0           6           neg1          # Load neg1 into $6
         add         1           6           1             # Subtract divisor from dividend
         add         3           3           5             # Increment quotient
-        beq         0           0           division_loop # Continue loop
+        beq         0           0          dvsloop # Continue loop
 
-quotient_add:
+quotad:
         add         3           3           4            # Increment quotient
         beq         0           0           done         # Jump to done
 
-halt_call:
-        lw          0           5           haltAdr      # Load address of halt subroutine into $5
+halcall:
+        lw          0           5           haltAd      # Load address of halt subroutine into $5
         jalr        5           0                        # Jump to halt
 
 done:
@@ -49,16 +49,16 @@ done:
         lw          7           6           stack         # Restore return address from stack
         jalr        6           0                        # Return from subroutine
 
-halt_label:
+hlabel:
         halt                                          # Stop execution
 
-dividend    .fill    1234       # Dividend (the number to be divided)
-divisor     .fill    123        # Divisor (the number to divide by)
-quotient    .fill    0          # Initialize quotient (result of division)
-remainder   .fill    0          # Initialize remainder
+dvd    .fill    1234       # Dividend (the number to be divided)
+dvs    .fill    123        # Divisor (the number to divide by)
+quot    .fill    0          # Initialize quotient (result of division)
+remain   .fill    0          # Initialize remainder
 neg1        .fill    -1         # Constant for -1 (used for subtraction or decrement)
-divStart    .fill    divide     # Address of the division routine
+dvst    .fill    divide     # Address of the division routine
 stack       .fill    0          # Stack pointer (if needed for subroutine calls)
-haltAdr     .fill    halt_label  # Address of halt subroutine
-doneAdr     .fill    done       # Address of done function
-divideAdr   .fill    divide     # Address of divide subroutine
+haltAd     .fill    hlabel  # Address of halt subroutine
+doneAd     .fill    done       # Address of done function
+dvAd   .fill    divide     # Address of divide subroutine
