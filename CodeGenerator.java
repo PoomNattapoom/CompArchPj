@@ -291,7 +291,7 @@ public class CodeGenerator implements NodeVisitor {
     Tokenizer tokenizer = new Tokenizer();
     // String assemblyCode = "add 1 2 1";
     // String assemblyCode = "HALT";
-    String assemblyCode = "lw 0 1 five \n five .fill 5";
+    String assemblyCode = "halt";
 
     List<Tokenizer.Token> tokens = tokenizer.tokenize(assemblyCode);
 

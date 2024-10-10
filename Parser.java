@@ -147,8 +147,6 @@ public class Parser {
         }
         if (currentToken.getType() == Tokenizer.TokenType.NUMBER) {
           instructionNode.addOperand(new NumberNode(Integer.parseInt(currentToken.getValue())));
-        } else if (currentToken.getType() == Tokenizer.TokenType.REGISTER) {
-          instructionNode.addOperand(new RegisterNode(currentToken.getValue()));
         } else if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
           instructionNode.addOperand(new LabelNode(currentToken.getValue()));
         } else {
@@ -167,8 +165,6 @@ public class Parser {
         }
         if (currentToken.getType() == Tokenizer.TokenType.NUMBER) {
           instructionNode.addOperand(new NumberNode(Integer.parseInt(currentToken.getValue())));
-        } else if (currentToken.getType() == Tokenizer.TokenType.REGISTER) {
-          instructionNode.addOperand(new RegisterNode(currentToken.getValue()));
         } else {
           throw new IllegalArgumentException("Invalid operand: " + currentToken.getValue());
         }
@@ -184,8 +180,6 @@ public class Parser {
         }
         if (currentToken.getType() == Tokenizer.TokenType.NUMBER) {
           instructionNode.addOperand(new NumberNode(Integer.parseInt(currentToken.getValue())));
-        } else if (currentToken.getType() == Tokenizer.TokenType.REGISTER) {
-          instructionNode.addOperand(new RegisterNode(currentToken.getValue()));
         } else if (currentToken.getType() == Tokenizer.TokenType.LABEL) {
           String name = currentToken.getValue();
           instructionNode.addOperand(new LabelNode(name));

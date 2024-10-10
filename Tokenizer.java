@@ -76,9 +76,8 @@ public class Tokenizer {
         tokens.add(new Token(part, TokenType.NUMBER));
       } else if (part.matches("[A-Za-z0-9_]*")) {
         tokens.add(new Token(part, TokenType.LABEL));
-      } else {
-        tokens.add(new Token(part, TokenType.UNKNOWN));
       }
+
     }
 
     // for (int i = 0; i < parts.length; i++) {
@@ -104,10 +103,6 @@ public class Tokenizer {
   private boolean isInstruction(String word) {
     // Add more instructions as necessary
     return word.matches("ADD|NAND|LW|SW|BEQ|JALR|HALT|NOOP|.FILL");
-  }
-
-  private boolean isRegister(String word) {
-    return word.matches("x[0-9]+");
   }
 
   private boolean isNumber(String word) {

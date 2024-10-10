@@ -34,13 +34,17 @@ public class Main {
 
     try {
       // Path to the text file
-      String filePath = "assembly/example.txt";
+      String filePath = "assembly/divide.txt";
 
       // Read all lines from the file and join them with '\n'
       String assemblyCode = String.join("\n", Files.readAllLines(Paths.get(filePath)));
 
       List<Tokenizer.Token> tokens = tokenizer.tokenize(assemblyCode);
       // List<Tokenizer.Token> tokens2 = tokenizer.tokenize(assemblyCode);
+
+      // for (Tokenizer.Token token : tokens) {
+      // System.out.println(token.toString());
+      // }
 
       Parser parser = new Parser(tokens);
       // Parser parser2 = new Parser(tokens2);
@@ -69,13 +73,13 @@ public class Main {
       System.out.println("Generated Machine Code:");
       System.out.println(codeGen.getDecMachineCode());
       writeStringToFile(codeGen.getDecMachineCode(),
-          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\assembly\\output\\test.txt");
+          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\assembly\\output\\divide.txt");
 
     } catch (IOException e) {
       e.printStackTrace();
     } catch (Exception e) {
       writeStringToFile("error",
-          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\assembly\\output\\test.txt");
+          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\assembly\\output\\divide.txt");
       System.err.println(e.getMessage());
       System.out.println("Process finished with exit code 1");
       System.exit(1);
