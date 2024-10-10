@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   /* Simulate machine instructions */
   while (1)
   {
-    if(instructionCount==500)break;
+    if(instructionCount==300)break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
@@ -42,13 +42,15 @@ int main(int argc, char *argv[])
     {
     case 0:                        // ADD
       destReg = instruction & 0x7; // rd is in last 3 bits
-      state.reg[destReg] = state.reg[regA] + state.reg[regB];
+      // state.reg[destReg] = state.reg[regA] + state.reg[regB];
+      state.reg[regA] = state.reg[destReg] + state.reg[regB];
       break;
 
-    case 1:                        // SUB
-      destReg = instruction & 0x7; // rd is in last 3 bits
-      state.reg[destReg] = state.reg[regA] - state.reg[regB];
+    case 1:                        // NAND
+      destReg = instruction & 0x7; // Destination register is in the last 3 bits
+      state.reg[destReg] = ~(state.reg[regA] & state.reg[regB]); // NAND operation
       break;
+
 
     case 2: // LW
       offset = instruction & 0xFFFF;
