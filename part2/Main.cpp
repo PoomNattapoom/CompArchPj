@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   /* Simulate machine instructions */
   while (1)
   {
-    if(instructionCount==9)break;
+    //if(instructionCount==9)break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
@@ -61,13 +61,13 @@ int main(int argc, char *argv[])
 
     case 3: // SW
       offset = instruction & 0xFFFF;
-      printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+      //printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
 
       if (offset & (1 << 15))
       {
         offset -= (1 << 16);
       }
-      printf("Offset after sign extension: %d\n", offset);
+      //printf("Offset after sign extension: %d\n", offset);
       state.mem[state.reg[regA] + offset +1] = state.reg[regB];
       state.numMemory+=state.reg[7]; //update size for print more mem
       break;
