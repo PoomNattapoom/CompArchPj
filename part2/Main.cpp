@@ -18,11 +18,11 @@ int main(int argc, char *argv[])
   initMachineStates(&state);
   loadMemory(&state, argv[1]);
 
-  int instructionCount = 1 ;
+  int instructionCount = 0 ;
   /* Simulate machine instructions */
   while (1)
   {
-    //if(instructionCount==9)break;
+    // if(instructionCount==10)break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     int regA = (instruction >> 19) & 0x7;   // 19-21
     int regB = (instruction >> 16) & 0x7;   // 16-18
     int destReg = 0, offset = 0;
+    int highestNumMemory = state.numMemory;
 
     switch (opcode)
     {
@@ -61,15 +62,15 @@ int main(int argc, char *argv[])
 
     case 3: // SW
       offset = instruction & 0xFFFF;
-      //printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+      printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
 
       if (offset & (1 << 15))
       {
         offset -= (1 << 16);
       }
-      //printf("Offset after sign extension: %d\n", offset);
-      state.mem[state.reg[regA] + offset +1] = state.reg[regB];
-      state.numMemory+=state.reg[7]; //update size for print more mem
+      printf("Offset after sign extension: %d\n", offset);
+      state.mem[state.reg[regA] + offset] = state.reg[regB];
+      state.highestNemMemory = state.numMemory + state.reg[7]; //update size for print more mem
       break;
 
 
@@ -91,17 +92,21 @@ int main(int argc, char *argv[])
       break;
 
       case 5:  // JALR
-        if (state.pc == state.reg[regB]) {
-          printf("Warning - Jalr infinity loop, Please check you input\n");
-          return 0;
+        if (regA == regB) {
+          int tempPC = state.pc + 1;
+          state.pc = state.reg[regA];  // Jump to address in regA
+          state.reg[regB] = tempPC;     // Store PC+1 in regB
+        } else {
+          state.reg[regB] = state.pc + 1; // Store PC+1 in regB
+          int targetAddress = state.reg[regA] - 1; // Adjust target address
+          state.pc = targetAddress; // Jump to adjusted address
         }
-        state.reg[regB] = state.pc + 1;
-        state.pc = state.reg[regA]-1;  // Jump to address in regA-1 then updatePC
         break;
+
 
     case 6: // HALT
       printf("machine halted\n");
-      printf("total of %d instructions executed\n", instructionCount);
+      printf("total of %d instructions executed\n", instructionCount+1);
       return 0;
 
     case 7: // NOOP
@@ -111,7 +116,7 @@ int main(int argc, char *argv[])
       printf("error: illegal opcode %d\n", opcode);
       return 1;
     }
-    //printf("____opcode is %d",opcode,"_____\n");
+    printf("____opcode is %d",opcode,"_____\n");
     //printState(&state);
     instructionCount++;
     updatePC(&state); // Update PC after executing instruction
@@ -164,7 +169,7 @@ void printState(MachineState *statePtr)
   printf("\n@@@\nstate:\n");
   printf("\tpc %d\n", statePtr->pc);
   printf("\tmemory:\n");
-  for (i = 0; i < statePtr->numMemory; i++)
+  for (i = 0; i < statePtr->highestNemMemory; i++)
   {
     printf("\t\tmem[ %d ] %d\n", i, statePtr->mem[i]);
   }
