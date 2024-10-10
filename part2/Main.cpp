@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   /* Simulate machine instructions */
   while (1)
   {
-    //(debug)if(instructionCount==9)break;
+    //if(instructionCount==9)break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
@@ -61,15 +61,13 @@ int main(int argc, char *argv[])
 
     case 3: // SW
       offset = instruction & 0xFFFF;
-      printf("Opcode SW detected. Offset before sign extension: %d\n", offset);
+      //printf("Opcode SW detected. Offset before sign extension: %d\n", offset);
 
       if (offset & (1 << 15))
       {
         offset -= (1 << 16);
       }
-
-      printf("Offset after sign extension: %d\n", offset);
-
+      //printf("Offset after sign extension: %d\n", offset);
       state.mem[state.reg[regA] + offset] = state.reg[regB];
       state.numMemory= state.numMemory+=state.reg[7]; //update size for print more mem
       break;
@@ -82,8 +80,8 @@ int main(int argc, char *argv[])
       }
       if (state.reg[regA] == state.reg[regB]) {
         if (offset == 0) {
-            printf("warning: BEQ has zero offset, preventing infinite loop\n");
-            state.pc += 1; // Move to next instruction to avoid looping
+            printf("warning: BEQ has zero offset, Please check you input\n");
+            return 0;
         } else {
             state.pc += offset;  // Apply the branch if condition is met
         }
@@ -94,7 +92,7 @@ int main(int argc, char *argv[])
 
       case 5:  // JALR
         if (state.pc == state.reg[regB]) {
-          printf("Warning - Jalr infinity loop, Please check you code\n");
+          printf("Warning - Jalr infinity loop, Please check you input\n");
           return 0;
         }
         state.reg[regB] = state.pc + 1;
@@ -113,8 +111,8 @@ int main(int argc, char *argv[])
       printf("error: illegal opcode %d\n", opcode);
       return 1;
     }
-    //(debug)printf("____opcode is %d",opcode,"_____\n");
-    //(debug)printState(&state);
+    //printf("____opcode is %d",opcode,"_____\n");
+    //printState(&state);
     instructionCount++;
     updatePC(&state); // Update PC after executing instruction
   }
