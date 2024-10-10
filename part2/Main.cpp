@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     int opcode = (instruction >> 22) & 0x7; // 22-24
     int regA = (instruction >> 19) & 0x7;   // 19-21
     int regB = (instruction >> 16) & 0x7;   // 16-18
-    int destReg, offset;
+    int destReg = 0, offset = 0;
 
     switch (opcode)
     {
