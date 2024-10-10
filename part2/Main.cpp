@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   /* Simulate machine instructions */
   while (1)
   {
-    // if(instructionCount==10)break;
+    if(instructionCount==500)break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
     int regA = (instruction >> 19) & 0x7;   // 19-21
     int regB = (instruction >> 16) & 0x7;   // 16-18
     int destReg = 0, offset = 0;
-    int highestNumMemory = state.numMemory;
 
     switch (opcode)
     {
@@ -53,10 +52,13 @@ int main(int argc, char *argv[])
 
     case 2: // LW
       offset = instruction & 0xFFFF;
+      printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+
       if (offset & (1 << 15))
       {
         offset -= (1 << 16);
       }
+      printf("Offset after sign extension: %d\n", offset);
       state.reg[regB] = state.mem[state.reg[regA] + offset];
       break;
 
@@ -70,7 +72,9 @@ int main(int argc, char *argv[])
       }
       printf("Offset after sign extension: %d\n", offset);
       state.mem[state.reg[regA] + offset] = state.reg[regB];
-      state.highestNemMemory = state.numMemory + state.reg[7]; //update size for print more mem
+      if (state.numMemory + state.reg[7] > state.highestNumMemory) {
+        state.highestNumMemory = state.numMemory + state.reg[7];
+      } //update size for print more mem
       break;
 
 
@@ -160,6 +164,7 @@ void loadMemory(MachineState *state, char *filename)
   }
 
   fclose(filePtr);
+  state->highestNumMemory = state->numMemory;
 }
 
 /* Print the current state of the machine */
@@ -169,7 +174,7 @@ void printState(MachineState *statePtr)
   printf("\n@@@\nstate:\n");
   printf("\tpc %d\n", statePtr->pc);
   printf("\tmemory:\n");
-  for (i = 0; i < statePtr->highestNemMemory; i++)
+  for (i = 0; i < statePtr->highestNumMemory; i++)
   {
     printf("\t\tmem[ %d ] %d\n", i, statePtr->mem[i]);
   }
