@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   /* Simulate machine instructions */
   while (1)
   {
-    if(instructionCount==300)break;
+    if(instructionCount==3)break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
