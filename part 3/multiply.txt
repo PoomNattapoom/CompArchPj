@@ -37,4 +37,4 @@ multiplier    .fill        3                   # Example multiplier = 3
 result        .fill        0                   # Initialize result to 0
 neg1          .fill        -1                  # For decrementing the multiplier
 stack         .fill        0                   # Stack start (initially empty)
-multiplyAdr   .fill        multiply            # Address of multiply subroutine
+multiplyAdr   .fill        multiply            # Address of multiply subroutin

@@ -49,6 +49,6 @@ n       .fill       7                                # Input n = 7
 r       .fill       3                                # Input r = 3
 neg1    .fill       -1                               # Constant -1 for subtraction
 pos1    .fill       1                                # Constant 1 for base case
-stack   .fill       0                                # Stack start
+stack   .fill       0                                # Stack starts
 
 
