@@ -33,8 +33,10 @@ public class Main {
     Tokenizer tokenizer = new Tokenizer();
 
     try {
+
+      String file = "divide.txt";
       // Path to the text file
-      String filePath = "assembly/divide.txt";
+      String filePath = "assembly/" + file;
 
       // Read all lines from the file and join them with '\n'
       String assemblyCode = String.join("\n", Files.readAllLines(Paths.get(filePath)));
@@ -73,13 +75,11 @@ public class Main {
       System.out.println("Generated Machine Code:");
       System.out.println(codeGen.getDecMachineCode());
       writeStringToFile(codeGen.getDecMachineCode(),
-          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\assembly\\output\\divide.txt");
+          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\assembly\\output\\" + file);
 
     } catch (IOException e) {
       e.printStackTrace();
     } catch (Exception e) {
-      writeStringToFile("error",
-          "C:\\Users\\iDeapad GM\\Documents\\Year3-1\\261304\\CompArchPj\\assembly\\output\\divide.txt");
       System.err.println(e.getMessage());
       System.out.println("Process finished with exit code 1");
       System.exit(1);
