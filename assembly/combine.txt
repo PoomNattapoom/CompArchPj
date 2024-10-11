@@ -1,4 +1,4 @@
-lw          0           1           n        # Load n into register 1
+        lw          0           1           n        # Load n into register 1
         lw          0           2           r        # Load r into register 2
 main    lw          0           6           ComAd    # Load new comb address into register 6
         jalr        6           7                    # Call combination(n, r)
@@ -51,4 +51,4 @@ n       .fill       7                               # Input n = 7
 r       .fill       3                                # Input r = 3
 neg1    .fill       -1                               # Constant -1 for subtraction
 pos1    .fill       1                                # Constant 1 for base case
-stack   .fill       0                                # Stack start
+stack   .fill       0                                # Stack starts
