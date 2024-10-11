@@ -8,7 +8,7 @@ public class Test3 {
   public static void main(String[] args) {
     try {
       // Path to the text file
-      String filePath = "assembly/tes.txt";
+      String filePath = "assembly/test.txt";
 
       // Read all lines from the file and join them with '\n'
       String assemblyCode = String.join("\n", Files.readAllLines(Paths.get(filePath)));

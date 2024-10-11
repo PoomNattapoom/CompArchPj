@@ -111,7 +111,7 @@ public class Tokenizer {
 
   // Main method for testing
   public static void main(String[] args) {
-    String assemblyCode = "start add 1 2 1 hello world \n add x1 x2 x3\n five .fill 5 dasd";
+    String assemblyCode = "start_s add 1 2 1 hello world \n add x1 x2 x3\n five .fill 5 dasd";
 
     Tokenizer tokenizer = new Tokenizer();
     List<Token> tokens = tokenizer.tokenize(assemblyCode);

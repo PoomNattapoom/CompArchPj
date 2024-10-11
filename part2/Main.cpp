@@ -18,11 +18,12 @@ int main(int argc, char *argv[])
   initMachineStates(&state);
   loadMemory(&state, argv[1]);
 
-  int instructionCount = 0 ;
+  int instructionCount = 0;
   /* Simulate machine instructions */
   while (1)
   {
-    if(instructionCount==3)break;
+    if (instructionCount == 5000)
+      break;
     printState(&state); // Print state before executing instruction
 
     int instruction = fetch(&state); // Fetch instruction
@@ -46,11 +47,10 @@ int main(int argc, char *argv[])
       state.reg[regA] = state.reg[destReg] + state.reg[regB];
       break;
 
-    case 1:                        // NAND
-      destReg = instruction & 0x7; // Destination register is in the last 3 bits
+    case 1:                                                      // NAND
+      destReg = instruction & 0x7;                               // Destination register is in the last 3 bits
       state.reg[destReg] = ~(state.reg[regA] & state.reg[regB]); // NAND operation
       break;
-
 
     case 2: // LW
       offset = instruction & 0xFFFF;
@@ -74,45 +74,54 @@ int main(int argc, char *argv[])
       }
       printf("Offset after sign extension: %d\n", offset);
       state.mem[state.reg[regA] + offset] = state.reg[regB];
-      if (state.numMemory + state.reg[7] > state.highestNumMemory) {
+      if (state.numMemory + state.reg[7] > state.highestNumMemory)
+      {
         state.highestNumMemory = state.numMemory + state.reg[7];
-      } //update size for print more mem
+      } // update size for print more mem
       break;
 
-
-    case 4:  // BEQ
+    case 4: // BEQ
       offset = instruction & 0xFFFF;
-      if (offset & (1 << 15)) {
-        offset -= (1 << 16);  // Sign-extend the offset
+      if (offset & (1 << 15))
+      {
+        offset -= (1 << 16); // Sign-extend the offset
       }
-      if (state.reg[regA] == state.reg[regB]) {
-        if (offset == 0) {
-            printf("warning: BEQ has zero offset, Please check you input\n");
-            return 0;
-        } else {
-            state.pc += offset;  // Apply the branch if condition is met
+      if (state.reg[regA] == state.reg[regB])
+      {
+        if (offset == 0)
+        {
+          printf("warning: BEQ has zero offset, Please check you input\n");
+          return 0;
         }
-      } else {
+        else
+        {
+          state.pc += offset; // Apply the branch if condition is met
+        }
+      }
+      else
+      {
         state.pc += 1; // No branch, move to next instruction
       }
       break;
 
-      case 5:  // JALR
-        if (regA == regB) {
-          int tempPC = state.pc + 1;
-          state.pc = state.reg[regA];  // Jump to address in regA
-          state.reg[regB] = tempPC;     // Store PC+1 in regB
-        } else {
-          state.reg[regB] = state.pc + 1; // Store PC+1 in regB
-          int targetAddress = state.reg[regA] - 1; // Adjust target address
-          state.pc = targetAddress; // Jump to adjusted address
-        }
-        break;
-
+    case 5: // JALR
+      if (regA == regB)
+      {
+        int tempPC = state.pc + 1;
+        state.pc = state.reg[regA]; // Jump to address in regA
+        state.reg[regB] = tempPC;   // Store PC+1 in regB
+      }
+      else
+      {
+        state.reg[regB] = state.pc + 1;          // Store PC+1 in regB
+        int targetAddress = state.reg[regA] - 1; // Adjust target address
+        state.pc = targetAddress;                // Jump to adjusted address
+      }
+      break;
 
     case 6: // HALT
       printf("machine halted\n");
-      printf("total of %d instructions executed\n", instructionCount+1);
+      printf("total of %d instructions executed\n", instructionCount + 1);
       return 0;
 
     case 7: // NOOP
@@ -122,15 +131,14 @@ int main(int argc, char *argv[])
       printf("error: illegal opcode %d\n", opcode);
       return 1;
     }
-    printf("____opcode is %d",opcode,"_____\n");
-    //printState(&state);
+    printf("____opcode is %d", opcode, "_____\n");
+    // printState(&state);
     instructionCount++;
     updatePC(&state); // Update PC after executing instruction
   }
 
   printState(&state); // Print state before exiting
   return 0;
-  
 }
 
 /* Initialize machine state: Set PC to 0 and registers to 0 */
