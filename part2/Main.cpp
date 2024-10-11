@@ -1,162 +1,220 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <iomanip>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "Simulator.h"
 
-using namespace std;
+#define MAXLINELENGTH 1000
 
-// ขนาดของ memory และจำนวน register ของ SMC
-const int NUM_REGISTERS = 8;
-const int MEMORY_SIZE = 65536;
+int main(int argc, char *argv[])
+{
+  if (argc != 2)
+  {
+    printf("error : usage : %s <machine-code file>\n", argv[0]);
+    exit(1);
+  }
 
-// โครงสร้างสำหรับเก็บสถานะของ machine (state ของ SMC)
-struct State {
-    int pc = 0;                          // Program Counter (PC)
-    int memory[MEMORY_SIZE] = {0};       // Memory
-    int registers[NUM_REGISTERS] = {0};  // Registers
-    int numMemory = 0;                   // จำนวนคำสั่งใน memory
-};
+  /* Initialize simulator and load machine code */
+  MachineState state;
+  initMachineStates(&state);
+  loadMemory(&state, argv[1]);
 
-void printState(const State& state) {
-    cout << "@@@ state before cycle " << endl;
-    cout << "\tpc " << state.pc << endl;
-    cout << "\tmemory:" << endl;
-    for (int i = 0; i < state.numMemory; ++i) {
-        cout << "\t\tmem[ " << i << " ] " << state.memory[i] << endl;
+  int instructionCount = 0 ;
+  /* Simulate machine instructions */
+  while (1)
+  {
+    if(instructionCount==5000)break;
+    printState(&state); // Print state before executing instruction
+    
+    // printf("Press Enter to continue...\n");
+    // getchar(); // Wait for user to press Enter
+
+
+    int instruction = fetch(&state); // Fetch instruction
+
+    if (instruction == 0)
+    { // Assuming '0' represents the halt instruction
+      halt();
+      printf("total of %d instructions executed\n", instructionCount+1);
+      break;
     }
-    cout << "\tregisters:" << endl;
-    for (int i = 0; i < NUM_REGISTERS; ++i) {
-        cout << "\t\treg[ " << i << " ] " << state.registers[i] << endl;
+
+    int opcode = (instruction >> 22) & 0x7; // 22-24
+    int regA = (instruction >> 19) & 0x7;   // 19-21
+    int regB = (instruction >> 16) & 0x7;   // 16-18
+    int destReg = 0, offset = 0;
+
+    switch (opcode)
+    {
+    case 0:                        // ADD
+      destReg = instruction & 0x7; // rd is in last 3 bits
+      // state.reg[destReg] = state.reg[regA] + state.reg[regB];
+      state.reg[regA] = state.reg[destReg] + state.reg[regB];
+      break;
+
+    case 1:                        // NAND
+      destReg = instruction & 0x7; // Destination register is in the last 3 bits
+      state.reg[destReg] = ~(state.reg[regA] & state.reg[regB]); // NAND operation
+      break;
+
+
+    case 2: // LW
+      offset = instruction & 0xFFFF;
+      printf("Opcode LW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+
+      if (offset & (1 << 15))
+      {
+        offset -= (1 << 16);
+      }
+      printf("Offset after sign extension: %d\n", offset);
+      printf("regA = %d, regB = %d, regA+offset = %d\n",state.reg[regA],state.reg[regB],state.reg[regA] + offset);
+      state.reg[regB] = state.mem[state.reg[regA] + offset];
+      break;
+
+    case 3: // SW
+      offset = instruction & 0xFFFF;
+      printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+      printf("regA = %d, regA+offset = %d\n",state.reg[regA],state.reg[regA] + offset);
+
+      if (offset & (1 << 15))
+      {
+        offset -= (1 << 16);
+      }
+      printf("Offset after sign extension: %d\n", offset);
+      state.mem[state.reg[regA] + offset] = state.reg[regB];
+      if (state.numMemory + state.reg[regA] > state.highestNumMemory) {
+        state.highestNumMemory = state.numMemory + state.reg[regA];
+      } //update size for print more mem
+      break;
+
+
+    case 4: // beq (branch if equal)
+      offset = instruction & 0xFFFF;
+      printf("Opcode BEQ detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+
+      if (offset & (1 << 15)) {
+        offset -= (1 << 16);
+      }
+      printf("Offset after sign extension: %d\n", offset);
+      printf("BEQ Check: regA = %d, regB = %d\n", state.reg[regA], state.reg[regB]);
+      printf("PC = %d, Offset = %d\n", state.pc, offset);
+
+      if (state.reg[regA] == state.reg[regB]) {
+        printf("Jumping to address: %d\n", state.pc + offset);
+        state.pc = state.pc + offset;
+      } else {
+        printf("Not jumping.\n");
+      }
+      break;
+
+
+    case 5:  // JALR
+      if (regA == regB) {
+        int tempPC = state.pc + 1;
+        state.pc = state.reg[regA];  // Jump to address in regA
+        state.reg[regB] = tempPC;     // Store PC+1 in regB
+      } else {
+        state.reg[regB] = state.pc + 1; // Store PC+1 in regB
+        int targetAddress = state.reg[regA] - 1; // Adjust target address
+        state.pc = targetAddress; // Jump to adjusted address
+      }
+      break;
+
+
+    case 6: // HALT
+      printf("machine halted\n");
+      printf("total of %d instructions executed\n", instructionCount+1);
+      return 0;
+
+    case 7: // NOOP
+      break;
+
+    default:
+      printf("error: illegal opcode %d\n", opcode);
+      return 1;
     }
-    cout << "end state" << endl;
+    printf("____opcode is %d",opcode,"_____\n");
+    //printState(&state);
+    instructionCount++;
+    updatePC(&state); // Update PC after executing instruction
+    //test
+
+
+  }
+
+  printState(&state); // Print state before exiting
+  return 0;
+  
 }
 
-// ฟังก์ชันแปลง 16-bit offsetField เป็น 32-bit integer
-int convertNum(int num) {
-    if (num & (1 << 15)) {
-        num -= (1 << 16);
-    }
-    return num;
+/* Initialize machine state: Set PC to 0 and registers to 0 */
+void initMachineStates(MachineState *state)
+{
+  state->pc = 0;
+  memset(state->reg, 0, sizeof(state->reg));
 }
 
-// ฟังก์ชันสำหรับจำลองการทำงานของ machine
-void simulate(State& state) {
-    bool halted = false;
-    int cycle = 0; // นับจำนวนรอบของการจำลอง
-    int instructionCount = 0; // ตัวนับจำนวนคำสั่งที่ถูก execute
+/* Load machine code into memory from file */
+void loadMemory(MachineState *state, char *filename)
+{
+  FILE *filePtr = fopen(filename, "r");
+  char line[MAXLINELENGTH];
 
-    while (!halted) {
-        if (cycle++ > 5000) { // จำกัดจำนวนรอบเพื่อป้องกัน Infinite Loop
-            cerr << "Error: Infinite loop detected, exiting simulation after 5000 cycles." << endl;
-            break;
-        }
+  if (filePtr == NULL)
+  {
+    printf("error : can't open file %s\n", filename);
+    perror("fopen");
+    exit(1);
+  }
 
-        // ตรวจสอบว่า PC อยู่ในขอบเขตของ memory หรือไม่
-        if (state.pc < 0 || state.pc >= state.numMemory) {
-            cerr << "Error: Program counter out of bounds, exiting simulation." << endl;
-            break;
-        }
-
-        printState(state);  // Print state ก่อนที่จะ execute คำสั่ง
-
-        int instruction = state.memory[state.pc];
-        int opcode = (instruction >> 22) & 0x7;  // ดึง opcode จาก bits 24-22
-        int regA = (instruction >> 19) & 0x7;   // ดึงค่า regA จาก bits 21-19
-        int regB = (instruction >> 16) & 0x7;   // ดึงค่า regB จาก bits 18-16
-        int destReg = instruction & 0x7;        // ดึงค่า destReg จาก bits 2-0
-        int offsetField = instruction & 0xFFFF; // ดึงค่า offsetField จาก bits 15-0
-
-        switch (opcode) {
-            case 0: // add
-                state.registers[destReg] = state.registers[regA] + state.registers[regB];
-                instructionCount++; // Increment instruction count
-                break;
-            case 1: // nand
-                state.registers[destReg] = ~(state.registers[regA] & state.registers[regB]);
-                instructionCount++; // Increment instruction count
-                break;
-            case 2: // lw (load word)
-                state.registers[regB] = state.memory[state.registers[regA] + convertNum(offsetField)];
-                instructionCount++; // Increment instruction count
-                break;
-            case 3: // sw (store word)
-                state.memory[state.registers[regA] + convertNum(offsetField)] = state.registers[regB];
-                instructionCount++; // Increment instruction count
-                break;
-            case 4: // beq (branch if equal)
-                if (state.registers[regA] == state.registers[regB]) {
-                    int newPC = state.pc + convertNum(offsetField);
-                    if (newPC >= 0 && newPC < state.numMemory) {
-                        state.pc = newPC; // กระโดดไปยังตำแหน่งที่กำหนด
-                    } else {
-                        cerr << "Error: Branch target out of bounds." << endl;
-                    }
-                    continue; // ทำให้ไม่เพิ่มค่า PC
-                }
-                instructionCount++; // Increment instruction count even if not branching
-                break;
-            case 5: // jalr (jump and link register)
-                state.registers[regB] = state.pc + 1;
-                {
-                    int targetPC = state.registers[regA] - 1; // PC จะเพิ่มขึ้นที่ด้านล่าง
-                    if (targetPC >= 0 && targetPC < state.numMemory) {
-                        state.pc = targetPC; // กระโดดไปยังตำแหน่งที่กำหนด
-                    } else {
-                        cerr << "Error: Jump target out of bounds." << endl;
-                    }
-                }
-                continue; // ทำให้ไม่เพิ่มค่า PC
-            case 6: // halt
-                halted = true;
-                cout << "Program halted." << endl;  // เพิ่มข้อความแสดงเมื่อโปรแกรมหยุดทำงาน
-                break;
-            case 7: // noop
-                // No operation
-                instructionCount++; // Increment instruction count
-                break;
-            default:
-                cerr << "Unknown opcode: " << opcode << endl;
-                exit(1);
-        }
-
-        // เพิ่มค่า PC หากไม่ใช่คำสั่ง jump
-        if (opcode != 4 && opcode != 5) { // หลีกเลี่ยงการเพิ่ม PC เมื่อใช้คำสั่ง beq หรือ jalr
-            state.pc++;
-        }
+  /* Read the entire machine-code file into memory */
+  for (state->numMemory = 0; fgets(line, MAXLINELENGTH, filePtr) != NULL;
+       state->numMemory++)
+  {
+    if (sscanf(line, "%d", &state->mem[state->numMemory]) != 1)
+    {
+      printf("error in reading address %d\n", state->numMemory);
+      exit(1);
     }
+    printf("memory[%d]=%d\n", state->numMemory, state->mem[state->numMemory]);
+  }
 
-    // Print state สุดท้ายก่อน exit
-    printState(state);
-    cout << "Total instructions executed: " << instructionCount << endl; // Print instruction count
+  fclose(filePtr);
+  state->highestNumMemory = state->numMemory;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        cerr << "Usage: " << argv[0] << " <machine-code-file>" << endl;
-        return 1;
-    }
+/* Print the current state of the machine */
+void printState(MachineState *statePtr)
+{
+  int i;
+  printf("\n@@@\nstate:\n");
+  printf("\tpc %d\n", statePtr->pc);
+  printf("\tmemory:\n");
+  for (i = 0; i < statePtr->highestNumMemory; i++)
+  {
+    printf("\t\tmem[ %d ] %d\n", i, statePtr->mem[i]);
+  }
+  printf("\tregisters:\n");
+  for (i = 0; i < NUMREGS; i++)
+  {
+    printf("\t\treg[ %d ] %d\n", i, statePtr->reg[i]);
+  }
+  printf("end state\n\n");
+}
 
-    ifstream infile(argv[1]);
-    if (!infile) {
-        cerr << "Error: Cannot open file " << argv[1] << endl;
-        return 1;
-    }
+/* Fetch the instruction at the current PC */
+int fetch(MachineState *state)
+{
+  return state->mem[state->pc]; // return the instruction at PC
+}
 
-    State state;
+/* Halt the simulator */
+void halt()
+{
+  printf("Halt instruction encountered. Stopping simulation. \n");
+}
 
-    // อ่าน machine code จากไฟล์และเก็บใน memory
-    int instruction;
-    while (infile >> instruction) {
-        if (state.numMemory < MEMORY_SIZE) {
-            state.memory[state.numMemory++] = instruction;
-        } else {
-            cerr << "Error: Memory overflow, too many instructions." << endl;
-            return 1;
-        }
-    }
-
-    // ทำการ simulate program
-    simulate(state);
-
-    return 0;
+/* Increment the PC to point to the next instruction */
+void updatePC(MachineState *state)
+{
+  state->pc += 1; // increment PC
 }

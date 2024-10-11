@@ -41,7 +41,7 @@ quotient    .fill    0          # Initialize quotient (result of division)
 remainder   .fill    0          # Initialize remainder
 neg1        .fill    -1         # Constant for -1 (used for subtraction or decrement)
 divStart    .fill    divide     # Address of the division routine
-stack       .fill    0          # Stack pointer (if needed for subroutine calls)
 haltAdr     .fill    halt_label  # Address of halt subroutine
 doneAdr     .fill    done       # Address of done function
 divideAdr .fill divide #Address of divide subroutine
+stack       .fill    0          # Stack pointer (if needed for subroutine calls)

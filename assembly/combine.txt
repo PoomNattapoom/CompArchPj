@@ -1,8 +1,8 @@
 lw          0           1           n        # Load n into register 1
         lw          0           2           r        # Load r into register 2
-main    lw          0           6           newComAdr   # Load new comb address into register 6
+main    lw          0           6           ComAd    # Load new comb address into register 6
         jalr        6           7                    # Call combination(n, r)
-done    halt                                        # End program
+done    halt                                         # End program
 comb    lw          0           6           pos1     # Temporary = 1
         sw          5           7           stack    # Save return address($7) on stack
         add         5           6           5        # Increment stack pointer
@@ -10,28 +10,29 @@ comb    lw          0           6           pos1     # Temporary = 1
         add         5           6           5        # Increment stack pointer
         sw          5           2           stack    # Save r on stack
         add         5           6           5        # Increment stack pointer
-        sw          5           4           stack    # Save local variable ($4) on stack
+        sw          5           4           stack    # Save local variable ($4)
         add         5           6           5        # Increment stack pointer
         beq         1           2           return   # If n == r, return 1
         beq         2           0           return   # If r == 0, return 1
-        lw          0           6           newElseAd   # Load new else address
-        jalr        6           0                    # Jump to else block
-return  lw          0           3           pos1     # Set $3 to 1
-        lw          0           6           newPopAdd   # Load new pop address
-        jalr        6           0                    # Jump to pop
+        lw          0           6           ElseAd   # Load new else address
+        jalr        6           3                    # Jump to else block
+return  lw          0           3           pos1     # Set $3 to 1 (Return 1 for base case)
+        lw          0           6           PopAd    # Load new pop address
+        jalr        6           7                    # Jump to pop (using jalr)
 else    lw          0           6           neg1     # Temporary = -1
         add         1           6           1        # n = n - 1
-        lw          0           6           newComAdr   # Load new comb address
+        lw          0           6           ComAd    # Load new comb address
         jalr        6           7                    # Recursive call comb(n-1, r)
         add         0           3           4        # Save result of comb(n-1, r) to $4
         lw          0           6           neg1     # Temporary = -1
         add         2           6           2        # r = r - 1
-        lw          0           6           newComAdr   # Load new comb address
+        lw          0           6           ComAd    # Load new comb address
         jalr        6           7                    # Recursive call comb(n-1, r-1)
         add         3           4           3        # Add comb(n-1, r) + comb(n-1, r-1)
-        lw          0           6           newPopAdd   # Load new pop address
-        jalr        6           0                    # Jump to pop
+        lw          0           6           PopAd    # Load new pop address
+        jalr        6           7                    # Jump to pop (using jalr)
 pop     lw          0           6           neg1     # Temporary = -1
+poplop  beq         5           0           popend    # end loop
         add         5           6           5        # Decrement stack pointer
         lw          5           4           stack    # Restore local variable ($4)
         add         5           6           5        # Decrement stack pointer
@@ -40,12 +41,13 @@ pop     lw          0           6           neg1     # Temporary = -1
         lw          5           1           stack    # Restore n
         add         5           6           5        # Decrement stack pointer
         lw          5           7           stack    # Restore return address($7)
-        jalr        7           0                    # Return from function
-newRetAdr  .fill       return
-newElseAd  .fill       else
-newPopAdd  .fill       pop
-newComAdr  .fill       comb
-n       .fill       7                                # Input n = 7
+        beq         0           0           poplop   # Repeat until all calls popped
+popend jalr        7           0                     # Return from function   
+RetAd   .fill       return
+ElseAd  .fill       else
+PopAd   .fill       pop
+ComAd   .fill       comb
+n       .fill       7                               # Input n = 7
 r       .fill       3                                # Input r = 3
 neg1    .fill       -1                               # Constant -1 for subtraction
 pos1    .fill       1                                # Constant 1 for base case

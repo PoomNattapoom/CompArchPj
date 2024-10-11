@@ -34,7 +34,7 @@ public class Main {
 
     try {
 
-      String file = "divide.txt";
+      String file = "combine.txt";
       // Path to the text file
       String filePath = "assembly/" + file;
 
