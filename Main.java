@@ -34,7 +34,7 @@ public class Main {
 
     try {
 
-      String file = "multiply.txt";
+      String file = "divide.txt";
       // Path to the text file
       String filePath = "assembly/" + file;
 
