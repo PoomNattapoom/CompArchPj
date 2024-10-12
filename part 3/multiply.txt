@@ -30,6 +30,6 @@ mcand   .fill   32                          # Multiplicand (32)
 mplier  .fill   10                          # Multiplier (10)
 pos1    .fill   1                           # Used for comparison
 zero    .fill   0                           # Constant 0
-one     .fill   1                           # Constant 1                      # Constant 1
+one     .fill   1                           # Constant 1                     
 
 
