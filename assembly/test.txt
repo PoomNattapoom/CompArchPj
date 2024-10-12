@@ -7,5 +7,5 @@ multi           beq     4       3       done     # if $4 == mplier ,hait
                 beq     0       0       multi  # jump to multipl loop
                 done     halt
 mcand .fill 20
-mplier .fill 75
+mplier .fill -1
 one .fill 1

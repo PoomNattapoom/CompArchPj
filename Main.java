@@ -34,7 +34,7 @@ public class Main {
 
     try {
 
-      String file = "combine.txt";
+      String file = "multiply.txt";
       // Path to the text file
       String filePath = "assembly/" + file;
 

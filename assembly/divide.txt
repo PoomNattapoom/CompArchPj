@@ -1,60 +1,18 @@
-lw          0           1           zero        # Initialize quotient (0) into $1
-        lw          0           2           zero        # Initialize remainder (0) into $2
-        lw          0           3           dividn      # Load dividend into $3
-        lw          0           4           divsor      # Load divisor into $4
-        lw          0           7           stackP      # Initialize stack pointer
-        lw          0           6           neg1        # Load -1 into $6 (used for decrementing stack pointer)
-        lw          0           5           divAdr      # Prepare to call divide subroutine
-        jalr        5           6                        # Call divide function
-        lw          0           5           doneAd      # Prepare to call done function
-        jalr        5           0                        # Call done function
-divide  sw          7           6           0            # Save return address on stack
-	lw	    0		6	    neg1	 # reassign -1 to $6 which previously overwrite by return address
-        add         7           7           6            # Decrement stack pointer using $6 (which contains -1)
-        sw          7           1           0            # Save $1 (quotient) on stack
-        add         7           7           6            # Decrement stack pointer using $6
-        sw          7           2           0            # Save $2 (remainder) on stack
-        add         7           7           6            # Decrement stack pointer using $6
-        sw          7           3           0            # Save $3 (dividend) on stack
-        add         7           7           6            # Decrement stack pointer using $6
-        sw          7           4           0            # Save $4 (divisor) on stack
-        add         7           7           6            # Decrement stack pointer using $6
-div_lp  beq         3           0           done         # If dividend == 0, go to done
-        beq         4           0           haltC        # If divisor == 0, call halt (error)
-        lw          0           5           neg1         # Load -1 into $5
-        nand        6           4           4            # $6 = ~divisor
-        add         6           6           5            # $6 = ~divisor + 1 (i.e., -divisor)
-        add         3           3           6            # $3 = dividend - divisor
-        beq         3           0           q_add        # If dividend == 0, go to quotient_add
-        beq         3           4           q_add        # If dividend == divisor, go to quotient_add     
-        lw          0           6           one          # Load 1 into $6
-        add         1           1           6            # Increment quotient
-        beq         0           0           div_lp       # Repeat loop
-q_add   lw          0           6           one          # Load 1 into $6
-        add         1           1           6            # Increment quotient once more
-        beq         0           0           done         # Jump to done
-haltC   lw          0           5           haltAd       # Load address of halt subroutine into $5
-        jalr        5           0                        # Jump to halt
-done    lw          7           4           0            # Restore $4 (divisor) from stack
-        lw          0           6           one          # Load 1 into $6 for incrementing stack pointer
-        add         7           7           6            # Increment stack pointer
-        lw          7           3           0            # Restore $3 (dividend) from stack
-        add         7           7           6            # Increment stack pointer
-        lw          7           2           0            # Restore $2 (remainder) from stack
-        add         7           7           6            # Increment stack pointer
-        lw          7           1           0            # Restore $1 (quotient) from stack
-        add         7           7           6            # Increment stack pointer
-        lw          7           6           0            # Restore return address from stack
-        jalr        6           0                        # Return from subroutine
-haltF   halt
-dividn      .fill    1234       # Dividend (the number to be divided)
-divsor      .fill    123        # Divisor (the number to divide by)
-zero        .fill    0          # Constant for 0 (used to initialize quotient/remainder)
-one         .fill    1          # Constant for 1 (used for incrementing quotient)
-neg1        .fill    -1         # Constant for -1 (used for stack pointer decrement)
-quotnt      .fill    0          # Initialize quotient (result of division)
-remndr      .fill    0          # Initialize remainder
-stackP      .fill    1024       # Stack pointer (set to a high memory address)
-haltAd      .fill    haltF      # Address of halt subroutine
-doneAd      .fill    done       # Address of done function
-divAdr      .fill    divide     # Address of divide subroutine
+        lw      0    3    n        # reg(1) = n (dividend)
+        lw      0    2    d        # reg(2) = d (divisor)
+        lw      0    1    quo     # reg(3) = 0 (quotient)
+        lw      0    4    neg1     # reg(4) = -1 (used for subtraction)
+        lw      0    5    pos1     # reg(5) = 1 (used for incrementing quotient)
+        lw      0    6    negd    # reg(6) = -d (used for incrementing quotient)
+        lw      0    7    
+loop    beq     3    2    done    # If n < d, exit loop
+        add     3    6    3        # n = n - d (simulate n -= d with -1 increments)
+        add     1    5    1        # quotient += 1
+        beq     0    0    loop     # Repeat loop
+done    halt                       # End program
+n       .fill   15                 # Example dividend: 15
+d       .fill   3                  # Example divisor: 3
+neg1    .fill   -1                 # Constant -1 for subtraction
+quo    .fill   0                  # Constant 0 to initialize quotient
+pos1 .fill 1
+negd .fill -3
