@@ -33,7 +33,7 @@ div_lp  beq         3           0           done         # If dividend == 0, go 
 q_add   lw          0           6           one          # Load 1 into $6
         add         1           1           6            # Increment quotient once more
         beq         0           0           done         # Jump to done
-haltC   lw          0           5           haltF       # Load address of halt subroutine into $5
+haltC   lw          0           5           haltAd       # Load address of halt subroutine into $5
         jalr        5           0                        # Jump to halt
 done    lw          7           4           0            # Restore $4 (divisor) from stack
         lw          0           6           one          # Load 1 into $6 for incrementing stack pointer
@@ -46,7 +46,7 @@ done    lw          7           4           0            # Restore $4 (divisor) 
         add         7           7           6            # Increment stack pointer
         lw          7           6           0            # Restore return address from stack
         jalr        6           0                        # Return from subroutine
-haltF   halt                                             # Stop execution
+haltF   halt
 dividn      .fill    1234       # Dividend (the number to be divided)
 divsor      .fill    123        # Divisor (the number to divide by)
 zero        .fill    0          # Constant for 0 (used to initialize quotient/remainder)
@@ -55,5 +55,6 @@ neg1        .fill    -1         # Constant for -1 (used for stack pointer decrem
 quotnt      .fill    0          # Initialize quotient (result of division)
 remndr      .fill    0          # Initialize remainder
 stackP      .fill    1024       # Stack pointer (set to a high memory address)
+haltAd      .fill    haltF      # Address of halt subroutine
 doneAd      .fill    done       # Address of done function
 divAdr      .fill    divide     # Address of divide subroutine
