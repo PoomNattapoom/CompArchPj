@@ -1,4 +1,4 @@
-        lw      0    3    n        # reg(1) = n (dividend)
+lw      0    3    n        # reg(1) = n (dividend)
         lw      0    2    d        # reg(2) = d (divisor)
         lw      0    1    quo     # reg(3) = 0 (quotient)
         lw      0    4    neg1     # reg(4) = -1 (used for subtraction)
