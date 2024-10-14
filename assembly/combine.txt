@@ -1,4 +1,4 @@
-lw          0           1           n        # Load n into register 1
+lw          0           1           n        # Load n into register 1 # Last version
         lw          0           2           r        # Load r into register 2
 main    lw          0           6           ComAd    # Load new comb address into register 6
         jalr        6           7                    # Call combination(n, r)
