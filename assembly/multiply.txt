@@ -1,15 +1,12 @@
 lw      0       1       mcand       # $1 = mcand (32)
         lw      0       2       mplier      # $2 = mplier (10)
         lw      0       3       zero        # $3 = 0, this will hold the result
-multi   beq     2       0       done        # If $2 (mplier) == 0, go to done (finished)
-        lw      0       4       one         # Load 1 into $4 for checking LSB
-        nand    2       4       6           # $6 = $2 NAND $4 (check if LSB of $2 is 1)
-        nand    6       6       6           # Double NAND to get AND result
-        beq     6       0       shift       # If LSB is 0, skip the addition step
-        add     1       3       3           # Add $1 (mcand) to $3 (result), store in $3
-shift   add     1       1       1           # Shift mcand left (multiply by 2)
-        add     2       2       2           # Shift mplier right (divide by 2)
-        beq     0       0       multi       # Repeat the loop
+        lw      0       4       zero        # $4 -> multiply counter
+        lw      0       5       pos1        # $5 -> 1 for furthur calculation
+multi   beq     2       4       done        # If counter == Multiplier, go to done (finished)
+        add     3       3       1
+        add     4       4       5
+        beq     0       0       multi
 done    halt                                # Halt the program
 mcand   .fill   32                          # Multiplicand (32)
 mplier  .fill   10                          # Multiplier (10)

@@ -1,19 +1,22 @@
-lw      0    3    n        # reg(1) = n (dividend)
+lw      0    1    quo      # reg(1) = 0 (quotient)
         lw      0    2    d        # reg(2) = d (divisor)
-        lw      0    1    quo     # reg(3) = 0 (quotient)
-        lw      0    4    neg1     # reg(4) = -1 (used for subtraction)
+        lw      0    3    n        # reg(3) = n (dividend)
+        lw      0    4    d        # reg(4) = d (used for subtraction)
         lw      0    5    pos1     # reg(5) = 1 (used for incrementing quotient)
-        lw      0    6    negd    # reg(6) = -d (used for incrementing quotient)
-        lw      0    7    temp
-loop    beq     3    2    done    # If n < d, exit loop
-        add     3    6    3        # n = n - d (simulate n -= d with -1 increments)
+        lw      0    6    count    # reg(6) = 0 (used for counting loop)
+        lw      0    7    lim      # reg(7) = 200 (used for loop limiter)
+        nand    4    4    4        # create ~divisor
+        add     4    4    5        # create -divisor by (~A + 1) = -A
+loop    beq     3    0    done     # If n == 0, exit loop
+        beq     6    7    done     # if count == limit, go to done(exceed loop limit)
+        add     6    6    5        # counter += 1
+        add     3    3    4        # n = n - d (simulate n -= d with -1 increments)
         add     1    5    1        # quotient += 1
         beq     0    0    loop     # Repeat loop
 done    halt                       # End program
-n       .fill   15                 # Example dividend: 15
-d       .fill   3                  # Example divisor: 3
-neg1    .fill   -1                 # Constant -1 for subtraction
-quo    .fill   0                  # Constant 0 to initialize quotient
-pos1 .fill 1
-negd .fill -3
-temp .fill 0
+n       .fill   49           # Example dividend: 49
+d       .fill   7            # Example divisor: 7
+quo     .fill   0            # Constant 0 to initialize quotient
+pos1    .fill   1
+count   .fill   0 
+lim     .fill   200
