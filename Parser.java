@@ -62,6 +62,9 @@ public class Parser {
         && !currentToken.getValue().toUpperCase().matches("ADD|NAND|LW|SW|BEQ|JALR|HALT|NOOP|.FILL")) {
       // System.out.println("Label: " + currentToken.getValue());
       label = currentToken.getValue();
+      if (label.length() > 6) {
+        throw new IllegalArgumentException("Label name can't be more than 6 alphabets: " + label);
+      }
       if (addressMap.containsKey(label)) {
         throw new IllegalArgumentException("Label already defined: " + label);
       }

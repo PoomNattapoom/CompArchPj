@@ -189,14 +189,14 @@ public class CodeGenerator implements NodeVisitor {
 
     machineCode.append(opCode); // Bits 24-22 opcode
 
-    ((NumberNode) node.getOperands().get(2)).accept(this); // Bits 21-19 regA (rs)
+    ((NumberNode) node.getOperands().get(0)).accept(this); // Bits 21-19 regA (rs)
 
     ((NumberNode) node.getOperands().get(1)).accept(this); // Bits 18-16 regB (rt)
 
     machineCode.append("0000000000000"); // Bits 15-3 Not used
 
     // Bits 2-0 Destination register (rd)
-    ((NumberNode) node.getOperands().get(0)).accept(this);
+    ((NumberNode) node.getOperands().get(2)).accept(this);
 
   }
 
@@ -240,7 +240,7 @@ public class CodeGenerator implements NodeVisitor {
     machineCode.append(opCode); // immediate
     rtNode.accept(this); // Destination register (rd)
     rsNode.accept(this);
-    machineCode.append("").append(immediate); // opcode
+    machineCode.append(immediate); // opcode
 
   }
 
@@ -269,7 +269,7 @@ public class CodeGenerator implements NodeVisitor {
   @Override
   public void visit(NumberNode node) {
     String value = String.format("%03d", Integer.parseInt(Integer.toBinaryString(node.getNumber())));
-    machineCode.append("").append(value);
+    machineCode.append(value);
   }
 
   public static int BinaryToDecimal(String bin) {
@@ -282,7 +282,6 @@ public class CodeGenerator implements NodeVisitor {
       decimalNumber += remainder * Math.pow(2, i);
       ++i;
     }
-
     return decimalNumber;
   }
 

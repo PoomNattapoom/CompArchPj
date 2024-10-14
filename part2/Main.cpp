@@ -22,14 +22,19 @@ int main(int argc, char *argv[])
   /* Simulate machine instructions */
   while (1)
   {
-    if(instructionCount==3)break;
+    if(instructionCount==5000)break;
     printState(&state); // Print state before executing instruction
+    
+    // printf("Press Enter to continue...\n");
+    // getchar(); // Wait for user to press Enter
+
 
     int instruction = fetch(&state); // Fetch instruction
 
     if (instruction == 0)
     { // Assuming '0' represents the halt instruction
       halt();
+      printf("total of %d instructions executed\n", instructionCount+1);
       break;
     }
 
@@ -54,19 +59,21 @@ int main(int argc, char *argv[])
 
     case 2: // LW
       offset = instruction & 0xFFFF;
-      printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+      printf("Opcode LW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
 
       if (offset & (1 << 15))
       {
         offset -= (1 << 16);
       }
       printf("Offset after sign extension: %d\n", offset);
+      printf("regA = %d, regB = %d, regA+offset = %d\n",state.reg[regA],state.reg[regB],state.reg[regA] + offset);
       state.reg[regB] = state.mem[state.reg[regA] + offset];
       break;
 
     case 3: // SW
       offset = instruction & 0xFFFF;
       printf("Opcode SW detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+      printf("regA = %d, regA+offset = %d\n",state.reg[regA],state.reg[regA] + offset);
 
       if (offset & (1 << 15))
       {
@@ -74,40 +81,43 @@ int main(int argc, char *argv[])
       }
       printf("Offset after sign extension: %d\n", offset);
       state.mem[state.reg[regA] + offset] = state.reg[regB];
-      if (state.numMemory + state.reg[7] > state.highestNumMemory) {
-        state.highestNumMemory = state.numMemory + state.reg[7];
+      if (state.numMemory + state.reg[regA] > state.highestNumMemory) {
+        state.highestNumMemory = state.numMemory + state.reg[regA];
       } //update size for print more mem
       break;
 
 
-    case 4:  // BEQ
+    case 4: // beq (branch if equal)
       offset = instruction & 0xFFFF;
+      printf("Opcode BEQ detected. Offset before sign extension: %d\n", state.reg[regA] + offset);
+
       if (offset & (1 << 15)) {
-        offset -= (1 << 16);  // Sign-extend the offset
+        offset -= (1 << 16);
       }
+      printf("Offset after sign extension: %d\n", offset);
+      printf("BEQ Check: regA = %d, regB = %d\n", state.reg[regA], state.reg[regB]);
+      printf("PC = %d, Offset = %d\n", state.pc, offset);
+
       if (state.reg[regA] == state.reg[regB]) {
-        if (offset == 0) {
-            printf("warning: BEQ has zero offset, Please check you input\n");
-            return 0;
-        } else {
-            state.pc += offset;  // Apply the branch if condition is met
-        }
+        printf("Jumping to address: %d\n", state.pc + offset);
+        state.pc = state.pc + offset;
       } else {
-        state.pc += 1; // No branch, move to next instruction
+        printf("Not jumping.\n");
       }
       break;
 
-      case 5:  // JALR
-        if (regA == regB) {
-          int tempPC = state.pc + 1;
-          state.pc = state.reg[regA];  // Jump to address in regA
-          state.reg[regB] = tempPC;     // Store PC+1 in regB
-        } else {
-          state.reg[regB] = state.pc + 1; // Store PC+1 in regB
-          int targetAddress = state.reg[regA] - 1; // Adjust target address
-          state.pc = targetAddress; // Jump to adjusted address
-        }
-        break;
+
+    case 5:  // JALR
+      if (regA == regB) {
+        int tempPC = state.pc + 1;
+        state.pc = state.reg[regA];  // Jump to address in regA
+        state.reg[regB] = tempPC;     // Store PC+1 in regB
+      } else {
+        state.reg[regB] = state.pc + 1; // Store PC+1 in regB
+        int targetAddress = state.reg[regA] - 1; // Adjust target address
+        state.pc = targetAddress; // Jump to adjusted address
+      }
+      break;
 
 
     case 6: // HALT
@@ -126,6 +136,9 @@ int main(int argc, char *argv[])
     //printState(&state);
     instructionCount++;
     updatePC(&state); // Update PC after executing instruction
+    //test
+
+
   }
 
   printState(&state); // Print state before exiting
